@@ -1,0 +1,40 @@
+---
+output:
+  github_document:
+    html_preview: false
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- Use snippet 'render_markdown' for it -->
+
+```{r,echo=FALSE}
+knitr::opts_chunk$set(
+  collapse=TRUE,
+  comment="#>",
+  fig.path="README-"
+)
+```
+
+# vegtable2
+
+<!-- badges: start -->
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vegtable2)](https://cran.r-project.org/package=vegtable2)
+<!-- badges: end -->
+
+This is a package with functions for the internal use and adapted to own
+purposes.
+The functions included here are extensions to `taxlist`
+([https://github.com/kamapu/taxlist](https://github.com/kamapu/taxlist)) and
+`vegtable`
+([https://github.com/kamapu/vegtable](https://github.com/kamapu/vegtable)) and
+its functions may not work with any database.
+
+## Updating to the last version of vegtable
+The very first step is to install the package
+[devtools](https://github.com/hadley/devtools) and dependencies.
+Then you just need to execute following commands in your R-session:
+
+```{r,eval=FALSE}
+library(devtools)
+install_github("kamapu/vegtable2")
+```

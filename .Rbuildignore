@@ -1,0 +1,14 @@
+^\.dbeaver$
+^\.git$
+^\.settings$
+^\.gitignore$
+^\.project$
+^\.travis.yml$
+^README-figures$
+^README\.md$
+^README\.Rmd$
+^README\.html$
+^data-raw$
+^build$
+^R_old$
+^\.github$
