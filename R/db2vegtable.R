@@ -86,7 +86,7 @@ db2vegtable.PostgreSQLConnection <- function(conn, header, sql_header, samples,
 	# samples
 	Query <- paste0("SELECT *\n",
 			"FROM \"", paste(samples, collapse = "\".\""), "\"\n",
-			"WHERE \"ReleveID\" IN (", paste0(veg_obj$header$ReleveID,
+			"WHERE releve_id IN (", paste0(veg_obj$header$releve_id,
 					collapse=","), ");\n")
 	veg_obj$samples <- dbGetQuery(conn, Query)
 	# layers
@@ -122,7 +122,13 @@ db2vegtable.PostgreSQLConnection <- function(conn, header, sql_header, samples,
 					c(bottom[1], top))
 		}
 	}
-	# final output
+  # replace names
+  colnames(veg_obj$header) <- replace_x(colnames(veg_obj$header),
+      old = "releve_id", new = "ReleveID")
+  colnames(veg_obj$samples) <- replace_x(colnames(veg_obj$samples),
+      old = c("releve_id", "taxon_usage_id"),
+      new = c("ReleveID", "TaxonUsageID"))
+  # final output
 	message("DONE!\n")
 	if(as_list)
 		invisible(veg_obj) else {
@@ -159,19 +165,19 @@ import_swea <- function(conn,
 				spec_miguel = c("specimens","specimens_miguel")
 		),
 		coverconvert = list(
-				br_bl = c("commons","br_bl"),
-				b_bbds = c("commons","b_bbds"),
-				ordinal = c("commons","ordinal")
+				br_bl = c("coverconvert","br_bl"),
+				b_bbds = c("coverconvert","b_bbds"),
+				ordinal = c("coverconvert","ordinal")
 		),
 		geometry = "plot_centroid",
 		get_countries = TRUE,
 		get_data_sources = TRUE,
 		bib_args = list(),
-		taxon_names = c("tax_commons","taxonNames"),
-		taxon_relations = c("swea_dataveg","taxonRelations"),
-		taxon_traits = c("swea_dataveg","taxonTraits"),
+		taxon_names = c("tax_commons","taxon_names"),
+		taxon_relations = c("swea_dataveg","taxon_concepts"),
+		taxon_traits = c("swea_dataveg","taxon_attributes"),
 		taxon_views = c("bib_references", "main_table"),
-		taxon_levels = c("tax_commons","taxonLevels"),
+		taxon_levels = c("tax_commons","taxon_levels"),
 		names2concepts = c("swea_dataveg","names2concepts"),
 		...) {
 	# Final object
@@ -187,14 +193,14 @@ import_swea <- function(conn,
 	# Adding Country codes
 	message("Importing country codes...")
 	if(get_countries) {
-		Query <- paste0("SELECT \"ReleveID\",\"ADM0_A3\"\n",
+		Query <- paste0("SELECT releve_id,adm0_a3\n",
 				"FROM \"", paste0(header, collapse = "\".\""),
 				"\",commons.countries_map\n",
 				"WHERE ST_Intersects(commons.countries_map.unit,\"",
 				paste0(header, collapse = "\".\""), "\".plot_centroid);\n")
 		Countries <- dbGetQuery(conn, Query)
 		veg_obj@header$country_code <- with(Countries,
-				ADM0_A3[match(veg_obj@header$ReleveID, ReleveID)])
+				adm0_a3[match(veg_obj@header$ReleveID, releve_id)])
 		Countries <- dbGetQuery(conn, "SELECT * FROM commons.countries;")
 		colnames(Countries) <- c("country_code","name_short","name_long",
 				"population","sov_code_1","sov_code_2","sov_state","continent")
@@ -241,19 +247,19 @@ import_sam <- function(conn,
 				spec_miguel = c("specimens","specimens_miguel")
 		),
 		coverconvert = list(
-				br_bl = c("commons","br_bl"),
-				b_bbds = c("commons","b_bbds"),
-				ordinal = c("commons","ordinal")
+				br_bl = c("coverconvert","br_bl"),
+				b_bbds = c("coverconvert","b_bbds"),
+				ordinal = c("coverconvert","ordinal")
 		),
 		geometry = "plot_centroid",
 		get_countries = TRUE,
 		get_data_sources = TRUE,
 		bib_args = list(),
-		taxon_names = c("tax_commons","taxonNames"),
-		taxon_relations = c("sudamerica","taxonRelations"),
-		taxon_traits = c("sudamerica","taxonTraits"),
+		taxon_names = c("tax_commons","taxon_names"),
+		taxon_relations = c("sudamerica","taxon_concepts"),
+		taxon_traits = c("sudamerica","taxon_attributes"),
 		taxon_views = c("bib_references", "main_table"),
-		taxon_levels = c("tax_commons","taxonLevels"),
+		taxon_levels = c("tax_commons","taxon_levels"),
 		names2concepts = c("sudamerica","names2concepts"),
 		...) {
 	# Final object	
@@ -279,9 +285,9 @@ import_bernice <- function(conn,
 				Author = "Bernice Mereina Sainepo",
 				Source = "SWEA-Dataveg (GIVD-AF-00-006)",
 				Version = Sys.Date()),
-		head_cols = c("ReleveID", "code_trr228", "original_number", "record_date",
+		head_cols = c("releve_id", "code_trr228", "original_number", "record_date",
 				"plot_size", "data_source", "elevation"),
-		samples_cols = c("record_id", "ReleveID", "quadrant", "TaxonUsageID",
+		samples_cols = c("record_id", "releve_id", "quadrant", "taxon_usage_id",
 				"misspelled_name", "cover_percentage", "frequency"),
 		...) {
 	# header

@@ -7,6 +7,7 @@ library(vegtable)
 library(dbaccess)
 library(RPostgreSQL)
 
+# For debug
 conn <- connect_db2("veg_databases", user = "miguel")
 taxon_names = c("tax_commons", "taxon_names")
 taxon_relations = c("swea_dataveg","taxon_concepts")
@@ -17,4 +18,13 @@ names2concepts = c("swea_dataveg","names2concepts")
 subset_levels = TRUE
 as_list = FALSE
 
-# Load function
+# Test final function
+library(devtools)
+
+install()
+
+rm(list=ls()[ls() != "conn"])
+
+library(vegtableDB)
+
+Spp <- swea_tax(conn)
