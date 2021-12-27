@@ -35,17 +35,17 @@ import_swea(
     c("swea_dataveg", "record_type")),
   layers = list(veg_layer = c("swea_dataveg", "veg_layer"), spec_miguel =
     c("specimens", "specimens_miguel")),
-  coverconvert = list(br_bl = c("commons", "br_bl"), b_bbds = c("commons", "b_bbds"),
-    ordinal = c("commons", "ordinal")),
+  coverconvert = list(br_bl = c("coverconvert", "br_bl"), b_bbds = c("coverconvert",
+    "b_bbds"), ordinal = c("coverconvert", "ordinal")),
   geometry = "plot_centroid",
   get_countries = TRUE,
   get_data_sources = TRUE,
   bib_args = list(),
-  taxon_names = c("tax_commons", "taxonNames"),
-  taxon_relations = c("swea_dataveg", "taxonRelations"),
-  taxon_traits = c("swea_dataveg", "taxonTraits"),
+  taxon_names = c("tax_commons", "taxon_names"),
+  taxon_relations = c("swea_dataveg", "taxon_concepts"),
+  taxon_traits = c("swea_dataveg", "taxon_attributes"),
   taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxonLevels"),
+  taxon_levels = c("tax_commons", "taxon_levels"),
   names2concepts = c("swea_dataveg", "names2concepts"),
   ...
 )
@@ -56,17 +56,17 @@ import_sam(
   samples = c("sudamerica", "samples"),
   relations = list(community_type = c("commons", "community_type")),
   layers = list(spec_miguel = c("specimens", "specimens_miguel")),
-  coverconvert = list(br_bl = c("commons", "br_bl"), b_bbds = c("commons", "b_bbds"),
-    ordinal = c("commons", "ordinal")),
+  coverconvert = list(br_bl = c("coverconvert", "br_bl"), b_bbds = c("coverconvert",
+    "b_bbds"), ordinal = c("coverconvert", "ordinal")),
   geometry = "plot_centroid",
   get_countries = TRUE,
   get_data_sources = TRUE,
   bib_args = list(),
-  taxon_names = c("tax_commons", "taxonNames"),
-  taxon_relations = c("sudamerica", "taxonRelations"),
-  taxon_traits = c("sudamerica", "taxonTraits"),
+  taxon_names = c("tax_commons", "taxon_names"),
+  taxon_relations = c("sudamerica", "taxon_concepts"),
+  taxon_traits = c("sudamerica", "taxon_attributes"),
   taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxonLevels"),
+  taxon_levels = c("tax_commons", "taxon_levels"),
   names2concepts = c("sudamerica", "names2concepts"),
   ...
 )
@@ -76,9 +76,9 @@ import_bernice(
   description = c(Title = "Parthenium survey in Lake Baringo", Author =
     "Bernice Mereina Sainepo", Source = "SWEA-Dataveg (GIVD-AF-00-006)", Version =
     Sys.Date()),
-  head_cols = c("ReleveID", "code_trr228", "original_number", "record_date",
+  head_cols = c("releve_id", "code_trr228", "original_number", "record_date",
     "plot_size", "data_source", "elevation"),
-  samples_cols = c("record_id", "ReleveID", "quadrant", "TaxonUsageID",
+  samples_cols = c("record_id", "releve_id", "quadrant", "taxon_usage_id",
     "misspelled_name", "cover_percentage", "frequency"),
   ...
 )

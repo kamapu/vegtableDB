@@ -24,22 +24,22 @@ db2taxlist(conn, ...)
 
 swea_tax(
   conn,
-  taxon_names = c("tax_commons", "taxonNames"),
-  taxon_relations = c("swea_dataveg", "taxonRelations"),
-  taxon_traits = c("swea_dataveg", "taxonTraits"),
+  taxon_names = c("tax_commons", "taxon_names"),
+  taxon_relations = c("swea_dataveg", "taxon_concepts"),
+  taxon_traits = c("swea_dataveg", "taxon_attributes"),
   taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxonLevels"),
+  taxon_levels = c("tax_commons", "taxon_levels"),
   names2concepts = c("swea_dataveg", "names2concepts"),
   ...
 )
 
 sam_tax(
   conn,
-  taxon_names = c("tax_commons", "taxonNames"),
-  taxon_relations = c("sudamerica", "taxonRelations"),
-  taxon_traits = c("sudamerica", "taxonTraits"),
+  taxon_names = c("tax_commons", "taxon_names"),
+  taxon_relations = c("sudamerica", "taxon_concepts"),
+  taxon_traits = c("sudamerica", "taxon_attributes"),
   taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxonLevels"),
+  taxon_levels = c("tax_commons", "taxon_levels"),
   names2concepts = c("sudamerica", "names2concepts"),
   ...
 )

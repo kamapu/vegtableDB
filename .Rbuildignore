@@ -1,6 +1,6 @@
 ^\.github$
 ^\.settings$
-^build$
+^build-pkg$
 ^data-raw$
 ^lab$
 ^R_old$
