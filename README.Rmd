@@ -15,10 +15,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# vegtable2
+# vegtableDB
 
 <!-- badges: start -->
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vegtable2)](https://cran.r-project.org/package=vegtable2)
 <!-- badges: end -->
 
 This is a package with functions for the internal use and adapted to own
@@ -36,5 +35,5 @@ Then you just need to execute following commands in your R-session:
 
 ```{r,eval=FALSE}
 library(devtools)
-install_github("kamapu/vegtable2")
+install_github("kamapu/vegtableDB")
 ```

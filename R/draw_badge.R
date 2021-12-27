@@ -34,7 +34,7 @@ draw_badge <- function(id, path, version = Sys.Date(), link, type = "version",
 	if(substr(path, nchar(path) - 4, nchar(path)) != ".svg")
 		path <- paste0(path, ".svg")
 	if(type == 1) {
-		badge <- readLines(file.path(path.package("vegtable2"), "version.svg"))
+		badge <- readLines(file.path(path.package("vegtableDB"), "version.svg"))
 		badge <- gsub("#VERSION", version, badge, ignore.case = FALSE)
 		con <- file(path, "wb", encoding = encoding, ...)
 		writeBin(charToRaw(paste0(badge, collapse = "\n")), con,
@@ -44,7 +44,7 @@ draw_badge <- function(id, path, version = Sys.Date(), link, type = "version",
 		message(paste0("Markdown code:\n", md_code))
 	}
 	if(type == 2) {
-		badge <- readLines(file.path(path.package("vegtable2"), "givd.svg"))
+		badge <- readLines(file.path(path.package("vegtableDB"), "givd.svg"))
 		badge <- gsub("#ID", id, badge, ignore.case = FALSE)
 		con <- file(path, "wb", encoding = encoding, ...)
 		writeBin(charToRaw(paste0(badge, collapse = "\n")), con,

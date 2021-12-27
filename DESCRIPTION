@@ -1,5 +1,5 @@
-Package: vegtable2
-Version: 0.2.1
+Package: vegtableDB
+Version: 0.0.1.9001
 Encoding: UTF-8
 Title: Handling Vegetation Data Sets (Advanced Features)
 Authors@R:
@@ -23,7 +23,7 @@ Remotes:
     kamapu/biblioDB
 Description: Extension of 'taxlist' and 'vegtable' for own databases.
 License: GPL (>= 2)
-URL: https://github.com/kamapu/vegtable2
-BugReports: https://github.com/kamapu/vegtable2/issues
+URL: https://github.com/kamapu/vegtableDB
+BugReports: https://github.com/kamapu/vegtableDB/issues
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1.9000

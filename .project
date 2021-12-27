@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>vegtable2</name>
+	<name>vegtableDB</name>
 	<comment>
 		Extension to R-package vegtable including custom functions.
 	</comment>

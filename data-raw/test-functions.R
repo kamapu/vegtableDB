@@ -4,10 +4,10 @@
 ################################################################################
 
 library(devtools)
-install_github("kamapu/vegtable2")
+install_github("kamapu/vegtableDB")
 install_gitlab("kamapu/dbaccess")
 
-library(vegtable2)
+library(vegtableDB)
 library(RPostgreSQL)
 library(biblioDB)
 library(dbaccess)

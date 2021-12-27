@@ -40,15 +40,24 @@ db2taxlist.PostgreSQLConnection <- function(conn, taxon_names, taxon_relations,
 	Query <- paste0("SELECT *\n",
 			"FROM \"", paste(taxon_names, collapse="\".\""), "\";\n")
 	species_obj$taxonNames <- dbGetQuery(conn, Query)
+  colnames(species_obj$taxonNames) <- replace_x(colnames(species_obj$taxonNames),
+      old = c("taxon_usage_id", "usage_name", "author_name"),
+      new = c("TaxonUsageID", "TaxonName", "AuthorName"))
 	# Import taxon concepts
 	message("Importing taxon concepts...")
 	Query <- paste0("SELECT *\n",
 			"FROM \"", paste(taxon_relations, collapse="\".\""), "\";\n")
 	species_obj$taxonRelations <- dbGetQuery(conn, Query)
-	# Link names and concepts
+  colnames(species_obj$taxonRelations) <- replace_x(colnames(species_obj$taxonRelations),
+      old = c("taxon_concept_id","parent_id", "rank"),
+      new = c("TaxonConceptID", "Parent", "Level"))
+  # Link names and concepts
 	Query <- paste0("SELECT *\n",
 			"FROM \"", paste(names2concepts, collapse="\".\""), "\";\n")
 	concepts <- dbGetQuery(conn, Query)
+  colnames(concepts) <- replace_x(colnames(concepts),
+      old = c("taxon_usage_id", "taxon_concept_id","name_status"),
+      new = c("TaxonUsageID", "TaxonConceptID", "NameStatus"))
 	species_obj$taxonNames$TaxonConceptID <-
 			concepts$TaxonConceptID[match(species_obj$taxonNames$TaxonUsageID,
 							concepts$TaxonUsageID)]
@@ -70,7 +79,10 @@ db2taxlist.PostgreSQLConnection <- function(conn, taxon_names, taxon_relations,
 	Query <-  paste0("SELECT *\n",
 			"FROM \"", paste(taxon_levels, collapse="\".\""), "\";\n")
 	tax_levels <- dbGetQuery(conn, Query)
-	if(subset_levels) tax_levels <- tax_levels[tax_levels$Level %in%
+  colnames(tax_levels) <- replace_x(colnames(tax_levels),
+      old = c("rank", "rank_idx"),
+      new = c("Level", "rank"))
+  if(subset_levels) tax_levels <- tax_levels[tax_levels$Level %in%
 						species_obj$taxonRelations$Level,]
 	tax_levels <- tax_levels[order(tax_levels$rank),]
 	species_obj$taxonRelations$Level <- factor(species_obj$taxonRelations$Level,
@@ -80,6 +92,8 @@ db2taxlist.PostgreSQLConnection <- function(conn, taxon_names, taxon_relations,
 		Query <-  paste0("SELECT *\n",
 				"FROM \"", paste(taxon_traits, collapse="\".\""), "\";\n")
 		species_obj$taxonTraits <- dbGetQuery(conn, Query)
+    colnames(species_obj$taxonTraits) <- replace_x(colnames(species_obj$taxonTraits),
+        old = "taxon_concept_id", new = "TaxonConceptID")
 	} else species_obj$taxonTraits <- data.frame(TaxonConceptID=integer(0))
 	# Import taxon views
 	message("Importing taxon views...")
@@ -125,11 +139,11 @@ db2taxlist.PostgreSQLConnection <- function(conn, taxon_names, taxon_relations,
 #' 
 #' @export
 swea_tax <- function(conn,
-		taxon_names = c("tax_commons","taxonNames"),
-		taxon_relations = c("swea_dataveg","taxonRelations"),
-		taxon_traits = c("swea_dataveg","taxonTraits"),
+		taxon_names = c("tax_commons","taxon_names"),
+		taxon_relations = c("swea_dataveg","taxon_concepts"),
+		taxon_traits = c("swea_dataveg","taxon_attributes"),
 		taxon_views = c("bib_references", "main_table"),
-		taxon_levels = c("tax_commons","taxonLevels"),
+		taxon_levels = c("tax_commons","taxon_levels"),
 		names2concepts = c("swea_dataveg","names2concepts"),
 		...) {
 	db2taxlist(conn = conn, taxon_names = taxon_names,
@@ -144,11 +158,11 @@ swea_tax <- function(conn,
 #' 
 #' @export
 sam_tax <- function(conn,
-		taxon_names=c("tax_commons","taxonNames"),
-		taxon_relations=c("sudamerica","taxonRelations"),
-		taxon_traits=c("sudamerica","taxonTraits"),
+		taxon_names=c("tax_commons","taxon_names"),
+		taxon_relations=c("sudamerica","taxon_concepts"),
+		taxon_traits=c("sudamerica","taxon_attributes"),
 		taxon_views = c("bib_references", "main_table"),
-		taxon_levels=c("tax_commons","taxonLevels"),
+		taxon_levels=c("tax_commons","taxon_levels"),
 		names2concepts=c("sudamerica","names2concepts"),
 		...) {
 	db2taxlist(conn = conn, taxon_names = taxon_names,
