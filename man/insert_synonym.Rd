@@ -21,8 +21,8 @@ insert_synonym(conn, ...)
 
 insert_synonym_swea(
   conn,
-  taxon_names = c("tax_commons", "taxonNames"),
-  taxon_relations = c("swea_dataveg", "taxonRelations"),
+  taxon_names = c("tax_commons", "taxon_names"),
+  taxon_relations = c("swea_dataveg", "taxon_concepts"),
   names2concepts = c("swea_dataveg", "names2concepts"),
   df,
   ...

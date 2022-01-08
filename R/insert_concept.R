@@ -137,8 +137,11 @@ insert_concept.PostgreSQLConnection <- function(conn, taxon_names,
   df$taxon_concept_id <- max(t_concepts$taxon_concept_id) + 1:nrow(df)
   df$name_status <- "accepted"
   # 1: insert names
-  pgInsert(conn, taxon_names, df[, colnames(df) %in%
-    c("taxon_usage_id", "usage_name", "author_name")])
+  pgInsert(
+    conn, taxon_names,
+    df[!df$taxon_usage_id %in% t_names$taxon_usage_id, colnames(df) %in%
+      c("taxon_usage_id", "usage_name", "author_name")]
+  )
   # 2: insert concepts
   pgInsert(conn, taxon_relations, df[, colnames(df) %in% c(
     "taxon_concept_id",

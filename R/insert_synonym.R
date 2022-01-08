@@ -36,74 +36,81 @@ insert_synonym <- function(conn, ...) {
 #' @aliases insert_synonym,PostgreSQLConnection-method
 #'
 #' @export
-insert_synonym.PostgreSQLConnection <- function(conn, taxon_names,
-                                                taxon_relations, names2concepts,
-                                                df, clean = TRUE, ...) {
+insert_synonym.PostgreSQLConnection <- function(conn,
+                                                taxon_names,
+                                                taxon_relations,
+                                                names2concepts,
+                                                df,
+                                                clean = TRUE,
+                                                ...) {
   if (clean) {
     df <- clean_strings(df)
   }
-  if (any(!c("TaxonConceptID", "TaxonName", "AuthorName") %in% colnames(df))) {
+  if (any(!c("taxon_concept_id", "usage_name", "author_name") %in%
+    colnames(df))) {
     stop(paste(
-      "Columns 'TaxonConceptID', 'TaxonName' and 'AuthorName'",
+      "Columns 'taxon_concept_id', 'usage_name' and 'author_name'",
       "are mandatory in 'df'."
     ))
   }
+  # Required assets
+  Query <- paste0(
+    "SELECT taxon_usage_id, taxon_concept_id\n",
+    "FROM \"", paste0(names2concepts, collapse = "\".\""), "\";\n"
+  )
+  n2c <- dbGetQuery(conn, Query)
+  Query <- paste0(
+    "SELECT *\n",
+    "FROM \"", paste0(taxon_names, collapse = "\".\""), "\";\n"
+  )
+  t_names <- dbGetQuery(conn, Query)
   ## Cross-check
-  # Check duplicated combinations in 'df'
-  if (any(duplicated(df[, c("TaxonName", "AuthorName")]))) {
+  # 1: Check duplicated combinations in 'df'
+  if (any(duplicated(df[, c("usage_name", "author_name")]))) {
     stop("Duplicated combinations detected in 'df'.")
   }
-  ## Extract names of database as reference
-  ## Insert synonyms in a loop
-  for (i in 1:nrow(df)) {
-    Query <- paste0(
-      "SELECT \"TaxonUsageID\", \"TaxonName\", \"AuthorName\"",
-      "\n", "FROM \"", paste(taxon_names, collapse = "\".\""), "\";"
-    )
-    db_names <- dbGetQuery(conn, Query)
-    if (paste(df$TaxonName[i], df$AuthorName[i]) %in%
-      paste(db_names$TaxonName, db_names$AuthorName)) {
-      message(paste0(
-        "Name '", paste(df$TaxonName[i], df$AuthorName[i]),
-        "' is already in database and will be recycled"
-      ))
-      usage_id <- db_names[paste(
-        db_names$TaxonName,
-        db_names$AuthorName
-      ) ==
-        paste(
-          df$TaxonName[i],
-          df$AuthorName[i]
-        ), "TaxonUsageID"]
-    } else {
-      usage_id <- max(db_names$TaxonUsageID) + 1
-      rpostgis::pgInsert(conn, taxon_names, data.frame(df[
-        i,
-        c("TaxonName", "AuthorName")
-      ],
-      TaxonUsageID = usage_id
-      ))
-    }
-    used_usages <- dbGetQuery(conn, paste0(
-      "SELECT \"TaxonUsageID\"\n",
-      "FROM \"", paste0(names2concepts, collapse = "\".\""),
-      "\";\n"
-    ))$TaxonUsageID
-    if (usage_id %in% used_usages) {
-      message(paste0(
-        "Name '", paste(df$TaxonName[i], df$AuthorName[i]),
-        "' is already in use and won't be inserted ",
-        "to the taxlist objec."
-      ))
-    } else {
-      rpostgis::pgInsert(conn, names2concepts, data.frame(
-        TaxonUsageID = usage_id,
-        TaxonConceptID = df$TaxonConceptID[i],
-        NameStatus = "synonym"
-      ))
-    }
+  # 2: Check combinations already existing in database and add IDs
+  if (any(with(df, paste(usage_name, author_name)) %in%
+    with(t_names, paste(usage_name, author_name)))) {
+    message(paste(
+      "Some combinations in 'df' already exist in the database",
+      "and may be recycled."
+    ))
   }
-  message("Done!")
+  df$taxon_usage_id <- with(t_names, taxon_usage_id[
+    match(
+      paste(df$usage_name, df$author_name),
+      paste(usage_name, author_name)
+    )
+  ])
+  new_ids <- sum(is.na(df$taxon_usage_id))
+  if (new_ids > 0) {
+    df$taxon_usage_id[is.na(df$taxon_usage_id)] <-
+      max(t_names$taxon_usage_id) + 1:new_ids
+  }
+  # 3: Check that usage names are not already in use
+  if (any(df$taxon_usage_id %in% n2c$taxon_usage_id)) {
+    stop("Some usage names are already in use in the database.")
+  }
+  # 4: Check existence of concepts in database
+  if (!all(df$taxon_concept_id %in% n2c$taxon_concept_id)) {
+    stop(paste(
+      "Some entries for 'taxon_concept_id' in 'df' are not",
+      "occurring in the database."
+    ))
+  }
+  # Add status of name
+  df$name_status <- "synonym"
+  # 1: insert names
+  pgInsert(
+    conn, taxon_names,
+    df[!df$taxon_usage_id %in% t_names$taxon_usage_id, colnames(df) %in%
+      c("taxon_usage_id", "usage_name", "author_name")]
+  )
+  # 2: insert names2concepts
+  pgInsert(conn, names2concepts, df[, colnames(df) %in%
+    c("taxon_usage_id", "taxon_concept_id", "name_status")])
+  message("DONE!")
 }
 
 #' @rdname insert_synonym
@@ -113,15 +120,9 @@ insert_synonym.PostgreSQLConnection <- function(conn, taxon_names,
 #' @export insert_synonym_swea
 #'
 insert_synonym_swea <- function(conn,
-                                taxon_names = c("tax_commons", "taxonNames"),
-                                taxon_relations = c(
-                                  "swea_dataveg",
-                                  "taxonRelations"
-                                ),
-                                names2concepts = c(
-                                  "swea_dataveg",
-                                  "names2concepts"
-                                ),
+                                taxon_names = c("tax_commons", "taxon_names"),
+                                taxon_relations = c("swea_dataveg", "taxon_concepts"),
+                                names2concepts = c("swea_dataveg", "names2concepts"),
                                 df, ...) {
   insert_synonym(
     conn, taxon_names, taxon_relations, names2concepts,
