@@ -31,153 +31,123 @@ insert_concept <- function(conn, ...) {
 #'
 #' @export
 insert_concept.PostgreSQLConnection <- function(conn, taxon_names,
-                                                taxon_relations, names2concepts,
-                                                taxon_views, taxon_levels, df,
+                                                taxon_relations, names2concepts, taxon_views, taxon_levels, df,
                                                 clean = TRUE, ...) {
   if (clean) {
     df <- clean_strings(df)
   }
-  if (any(!c("TaxonName", "AuthorName") %in% colnames(df))) {
+  if (any(!c("usage_name", "author_name") %in% colnames(df))) {
     stop(paste(
-      "Columns 'TaxonName' and 'AuthorName'",
+      "Columns 'usage_name' and 'author_name'",
       "are mandatory in argument 'df'."
     ))
   }
-  if ("TaxonConceptID" %in% colnames(df)) {
+  if ("taxon_concept_id" %in% colnames(df)) {
     stop(paste(
-      "Column 'TaxonConceptID' detected in 'df'.",
-      "Use 'insert_synonym' instead"
+      "Column 'taxon_concept_id' detected in 'df'.",
+      "Use 'insert_synonym()' instead"
     ))
   }
-  suppressMessages(taxa <- db2taxlist(conn, taxon_names, taxon_relations,
-    names2concepts = names2concepts, taxon_views = taxon_views,
-    taxon_levels = taxon_levels, ...
-  ))
   ## Cross-check
+  # 0: Required assets
+  Query <- paste0(
+    "SELECT taxon_usage_id, taxon_concept_id\n",
+    "FROM \"", paste0(names2concepts, collapse = "\".\""), "\";\n"
+  )
+  n2c <- dbGetQuery(conn, Query)
+  Query <- paste0(
+    "SELECT *\n",
+    "FROM \"", paste0(taxon_names, collapse = "\".\""), "\";\n"
+  )
+  t_names <- dbGetQuery(conn, Query)
+  Query <- paste0(
+    "SELECT *\n",
+    "FROM \"", paste0(taxon_levels, collapse = "\".\""), "\";\n"
+  )
+  t_levels <- dbGetQuery(conn, Query)
+  Query <- paste0(
+    "SELECT *\n",
+    "FROM \"", paste0(taxon_relations, collapse = "\".\""), "\";\n"
+  )
+  t_concepts <- dbGetQuery(conn, Query)
+  Query <- paste0(
+    "SELECT bibtexkey\n",
+    "FROM \"", paste0(taxon_views, collapse = "\".\""), "\";\n"
+  )
+  b_keys <- unlist(dbGetQuery(conn, Query))
   # 1: Check duplicated combinations in 'df'
-  if (any(duplicated(df[, c("TaxonName", "AuthorName")]))) {
+  if (any(duplicated(df[, c("taxon_name", "author_name")]))) {
     stop("Duplicated combinations detected in 'df'.")
   }
-  # 2: Check combinations already existing in database
-  if (any(with(df, paste(TaxonName, AuthorName)) %in%
-    with(
-      taxa@taxonNames,
-      paste(TaxonName, AuthorName)
-    ))) {
-    stop("Some combinations in 'df' already exist in database.")
-  }
-  # 3: Check names already existing as accepted names
-  # TODO: Apply only to the combination of name and author
-  if (any(df$TaxonName %in% accepted_name(taxa)$TaxonName)) {
-    stop(paste(
-      "Some names are already existing as accepted names",
-      "in database."
+  # 2: Check combinations already existing in database and add IDs
+  if (any(with(df, paste(usage_name, author_name)) %in%
+    with(t_names, paste(usage_name, author_name)))) {
+    message(paste(
+      "Some combinations in 'df' already exist in the database",
+      "and may be recycled."
     ))
   }
+  df$taxon_usage_id <- with(t_names, taxon_usage_id[
+    match(
+      paste(df$usage_name, df$author_name),
+      paste(usage_name, author_name)
+    )
+  ])
+  new_ids <- sum(is.na(df$taxon_usage_id))
+  if (new_ids > 0) {
+    df$taxon_usage_id[is.na(df$taxon_usage_id)] <-
+      max(t_names$taxon_usage_id) + 1:new_ids
+  }
+  # 3: Check that usage names are not already in use
+  if (any(df$taxon_usage_id %in% n2c$taxon_usage_id)) {
+    stop("Some usage names are already in use in the database.")
+  }
   # 4: Check existence of parents in database
-  if ("Parent" %in% colnames(df) &
-    !all(df$Parent[!is.na(df$Parent)] %in%
-      taxa@taxonRelations$TaxonConceptID)) {
+  if ("parent_id" %in% colnames(df) &
+    !all(df$parent_id %in% n2c$taxon_concept_id)) {
     stop(paste(
-      "Some entries for 'Parent' in 'df' are not",
-      "occurring in database."
+      "Some entries for 'parent_id' in 'df' are not",
+      "occurring in the database."
     ))
   }
   # 5: Check existence of levels in database
-  Levels <- dbGetQuery(
-    conn,
-    "SELECT \"Level\" FROM tax_commons.\"taxonLevels\";"
-  )$Level
-  if ("Level" %in% colnames(df) & !all(paste(df$Level[!is.na(df$Level)]) %in%
-    Levels)) {
-    stop(paste(
-      "Some entries for 'Level' in 'df' are not",
-      "occurring in database."
-    ))
-  }
-  # 6: Check existence of view IDs in database
-  # TODO: Next code may cause wrong error
-  if ("ViewID" %in% colnames(df) &
-    !all(df$ViewID[!is.na(df$ViewID)] %in%
-      taxa@taxonViews$ViewID)) {
-    stop(paste(
-      "Some entries for 'ViewID' in 'df' are not",
-      "occurring in database."
-    ))
-  }
-  # 7: Check consistency of levels
-  # TODO: Next code won't work with NA Parents
-  if ("Level" %in% colnames(df) & "Parent" %in% colnames(df)) {
-    new_levels <- as.integer(factor(df$Level,
-      levels = taxlist::levels(taxa)
-    ))
-    parent_levels <- with(
-      taxa@taxonRelations,
-      as.integer(Level[match(df$Parent, TaxonConceptID)])
-    )
-    if (any(new_levels >= parent_levels)) {
+  if ("rank" %in% colnames(df)) {
+    if (any(!df$rank %in% t_levels$rank)) {
       stop(paste(
-        "Children cannot be of equal or higher level than",
-        "the respective parents."
+        "Some entries for 'rank' in 'df' are not",
+        "occurring in the database."
       ))
     }
   }
+  # 6: Check parents higher than children
+  if (all(c("rank", "parent_id") %in% colnames(df))) {
+    parent_l <- with(t_concepts, rank[match(df$parent_id, taxon_concept_id)])
+    parent_l <- with(t_levels, rank_idx[match(parent_l, rank)])
+    child_l <- with(t_levels, rank_idx[match(df$rank, rank)])
+    if (any(child_l >= parent_l)) {
+      stop("All parents have to be of higher rank than the inserted children.")
+    }
+  }
+  # 7: Check existence of taxon views
+  if ("view_key" %in% colnames(df) & !all(df$view_key %in% b_keys)) {
+    stop("Some values of 'view_key' in 'df' are not occurring in the database.")
+  }
   ## TODO: Allow the possibility of inserting some taxon traits
   ## Prepare data frame
-  # Check existence of the name combination
-  SQL <- paste0(
-    "SELECT \"TaxonUsageID\", \"TaxonName\", \"AuthorName\"",
-    "\n", "FROM \"", paste(taxon_names, collapse = "\".\""), "\";"
-  )
-  db_names <- dbGetQuery(conn, SQL)
-  # TODO: this will work only for one entry!!!
-  if (with(df, paste(TaxonName, AuthorName)) %in%
-    with(db_names, paste(TaxonName, AuthorName))) {
-    message(paste0(
-      "Taxon name '", with(df, paste(TaxonName, AuthorName)),
-      "' already in database. ",
-      "This name will be recycled.\n"
-    ))
-    usage_id <- unlist(db_names[
-      with(
-        db_names,
-        paste(TaxonName, AuthorName)
-      ) ==
-        with(df, paste(TaxonName, AuthorName)),
-      "TaxonUsageID"
-    ]) - 1
-  } else {
-    SQL <- paste0(
-      "SELECT MAX(\"TaxonUsageID\")", "\n",
-      "FROM \"", paste(taxon_names, collapse = "\".\""), "\";", "\n"
-    )
-    usage_id <- unlist(dbGetQuery(conn, SQL))
-  }
-  df$TaxonUsageID <- usage_id + c(1:nrow(df))
-  df$TaxonConceptID <- max(taxa@taxonRelations$TaxonConceptID) + c(1:nrow(df))
-  # 2: Get colnames of Postgres tables
-  description <- get_description(conn)
-  col_names <- with(
-    description,
-    column[schema == taxon_names[1] & table == taxon_names[2]]
-  )
-  col_relations <- with(
-    description,
-    column[schema == taxon_relations[1] & table == taxon_relations[2]]
-  )
-  ## Import tables
-  # 2: Insert to database
-  if (!with(df, paste(TaxonName, AuthorName)) %in%
-    with(db_names, paste(TaxonName, AuthorName))) {
-    pgInsert(conn, taxon_names, df[, colnames(df) %in% col_names])
-  }
-  pgInsert(conn, taxon_relations, df[, colnames(df) %in% col_relations])
-  pgInsert(
-    conn, names2concepts,
-    data.frame(df[, c("TaxonUsageID", "TaxonConceptID")],
-      NameStatus = "accepted", stringsAsFactors = FALSE
-    )
-  )
+  df$taxon_concept_id <- max(t_concepts$taxon_concept_id) + 1:nrow(df)
+  df$name_status <- "accepted"
+  # 1: insert names
+  pgInsert(conn, taxon_names, df[, colnames(df) %in%
+    c("taxon_usage_id", "usage_name", "author_name")])
+  # 2: insert concepts
+  pgInsert(conn, taxon_relations, df[, colnames(df) %in% c(
+    "taxon_concept_id",
+    "parent_id", "rank", "view_key"
+  )])
+  # 3: insert names2concepts
+  pgInsert(conn, names2concepts, df[, colnames(df) %in%
+    c("taxon_usage_id", "taxon_concept_id", "name_status")])
+  message("DONE!")
 }
 
 #' @rdname insert_concept
@@ -193,12 +163,38 @@ insert_concept_swea <- function(conn, ...) {
 #'
 #' @export
 insert_concept_swea.PostgreSQLConnection <- function(conn,
-                                                     taxon_names = c("tax_commons", "taxonNames"),
-                                                     taxon_relations = c("swea_dataveg", "taxonRelations"),
+                                                     taxon_names = c("tax_commons", "taxon_names"),
+                                                     taxon_relations = c("swea_dataveg", "taxon_concepts"),
                                                      names2concepts = c("swea_dataveg", "names2concepts"),
                                                      taxon_views = c("bib_references", "main_table"),
-                                                     taxon_levels = c("tax_commons", "taxonLevels"),
+                                                     taxon_levels = c("tax_commons", "bb_levels"),
                                                      df, ...) {
+  insert_concept(
+    conn, taxon_names, taxon_relations, names2concepts,
+    taxon_views, taxon_levels, df, ...
+  )
+}
+
+#' @rdname insert_concept
+#'
+#' @export
+insert_concept_ecoveg <- function(conn, ...) {
+  UseMethod("insert_concept_ecoveg", conn)
+}
+
+
+#' @rdname insert_concept
+#' @aliases insert_concept_ecoveg
+#'   insert_concept_ecoveg,PostgreSQLConnection-method
+#'
+#' @export
+insert_concept_ecoveg.PostgreSQLConnection <- function(conn,
+                                                       taxon_names = c("tax_commons", "ecoveg_f_names"),
+                                                       taxon_relations = c("syntax_ecoveg_f", "taxon_concepts"),
+                                                       names2concepts = c("syntax_ecoveg_f", "names2concepts"),
+                                                       taxon_views = c("bib_references", "main_table"),
+                                                       taxon_levels = c("tax_commons", "ecoveg_f_levels"),
+                                                       df, ...) {
   insert_concept(
     conn, taxon_names, taxon_relations, names2concepts,
     taxon_views, taxon_levels, df, ...

@@ -7,6 +7,9 @@
 \alias{insert_concept_swea}
 \alias{insert_concept_swea.PostgreSQLConnection}
 \alias{insert_concept_swea,PostgreSQLConnection-method}
+\alias{insert_concept_ecoveg}
+\alias{insert_concept_ecoveg.PostgreSQLConnection}
+\alias{insert_concept_ecoveg,PostgreSQLConnection-method}
 \title{Insert names or concepts in PostgreSQL taxonomic lists}
 \usage{
 insert_concept(conn, ...)
@@ -27,11 +30,24 @@ insert_concept_swea(conn, ...)
 
 \method{insert_concept_swea}{PostgreSQLConnection}(
   conn,
-  taxon_names = c("tax_commons", "taxonNames"),
-  taxon_relations = c("swea_dataveg", "taxonRelations"),
+  taxon_names = c("tax_commons", "taxon_names"),
+  taxon_relations = c("swea_dataveg", "taxon_concepts"),
   names2concepts = c("swea_dataveg", "names2concepts"),
   taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxonLevels"),
+  taxon_levels = c("tax_commons", "bb_levels"),
+  df,
+  ...
+)
+
+insert_concept_ecoveg(conn, ...)
+
+\method{insert_concept_ecoveg}{PostgreSQLConnection}(
+  conn,
+  taxon_names = c("tax_commons", "ecoveg_f_names"),
+  taxon_relations = c("syntax_ecoveg_f", "taxon_concepts"),
+  names2concepts = c("syntax_ecoveg_f", "names2concepts"),
+  taxon_views = c("bib_references", "main_table"),
+  taxon_levels = c("tax_commons", "ecoveg_f_levels"),
   df,
   ...
 )
