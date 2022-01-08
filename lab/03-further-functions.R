@@ -25,22 +25,23 @@ Fobj <- db2taxlist(conn,
     taxon_views = c("bib_references", "main_table"),
     taxon_levels = c("tax_commons", "ecoveg_f_levels"))
 
-# For function
-taxon_names = c("tax_commons", "ecoveg_f_names")
-taxon_relations = c("syntax_ecoveg_f", "taxon_concepts")
-names2concepts = c("syntax_ecoveg_f", "names2concepts")
-taxon_traits = c("syntax_ecoveg_f", "taxon_attributes")
-taxon_views = c("bib_references", "main_table")
-taxon_levels = c("tax_commons", "ecoveg_f_levels")
-clean = TRUE
+summary(Fobj, 74)
 
-df = data.frame(taxon_concept_id = 74,
-    usage_name = "Blabla bla",
-    author_name = "author")
+# Insert fictive synonym
+insert_synonym(conn,
+    taxon_names = c("tax_commons", "ecoveg_f_names"),
+    taxon_relations = c("syntax_ecoveg_f", "taxon_concepts"),
+    names2concepts = c("syntax_ecoveg_f", "names2concepts"),
+    df = data.frame(taxon_concept_id = 74,
+        usage_name = "Blabla bla",
+        author_name = "author"))
 
+Fobj <- db2taxlist(conn,
+    taxon_names = c("tax_commons", "ecoveg_f_names"),
+    taxon_relations = c("syntax_ecoveg_f", "taxon_concepts"),
+    names2concepts = c("syntax_ecoveg_f", "names2concepts"),
+    taxon_traits = c("syntax_ecoveg_f", "taxon_attributes"),
+    taxon_views = c("bib_references", "main_table"),
+    taxon_levels = c("tax_commons", "ecoveg_f_levels"))
 
-
-
-
-
-
+summary(Fobj, 74)
