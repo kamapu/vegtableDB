@@ -76,7 +76,7 @@ insert_concept.PostgreSQLConnection <- function(conn, taxon_names,
   )
   b_keys <- unlist(dbGetQuery(conn, Query))
   # 1: Check duplicated combinations in 'df'
-  if (any(duplicated(df[, c("taxon_name", "author_name")]))) {
+  if (any(duplicated(df[, c("usage_name", "author_name")]))) {
     stop("Duplicated combinations detected in 'df'.")
   }
   # 2: Check combinations already existing in database and add IDs
