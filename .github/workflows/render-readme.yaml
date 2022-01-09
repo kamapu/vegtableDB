@@ -24,7 +24,7 @@ jobs:
       
       # Install packages needed from GitHub
       - name: install from GitHub
-        run: Rscript -e 'remotes::install_github("kamapu/vegtable2")'
+        run: Rscript -e 'remotes::install_github("kamapu/vegtableDB")'
       
       # Render README.md using rmarkdown
       - name: render README
