@@ -12,6 +12,10 @@ rm(list = ls())
 
 # Clean folder
 unlink(file.path("build-pkg", list.files("build-pkg", ".tar.gz")))
+unlink(file.path("build-pkg", list.files("build-pkg", ".pdf")))
+
+# Write data
+source("data-raw/create-data.R")
 
 # Apply style to scripts
 style_pkg()

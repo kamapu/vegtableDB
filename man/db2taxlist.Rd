@@ -3,46 +3,11 @@
 \name{db2taxlist}
 \alias{db2taxlist}
 \alias{db2taxlist.PostgreSQLConnection}
-\alias{swea_tax}
-\alias{sam_tax}
 \title{Import relational databases into taxlist objects}
 \usage{
 db2taxlist(conn, ...)
 
-\method{db2taxlist}{PostgreSQLConnection}(
-  conn,
-  taxon_names,
-  taxon_relations,
-  taxon_traits,
-  taxon_levels,
-  taxon_views,
-  names2concepts,
-  subset_levels = TRUE,
-  as_list = FALSE,
-  ...
-)
-
-swea_tax(
-  conn,
-  taxon_names = c("tax_commons", "taxon_names"),
-  taxon_relations = c("swea_dataveg", "taxon_concepts"),
-  taxon_traits = c("swea_dataveg", "taxon_attributes"),
-  taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxon_levels"),
-  names2concepts = c("swea_dataveg", "names2concepts"),
-  ...
-)
-
-sam_tax(
-  conn,
-  taxon_names = c("tax_commons", "taxon_names"),
-  taxon_relations = c("sudamerica", "taxon_concepts"),
-  taxon_traits = c("sudamerica", "taxon_attributes"),
-  taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "taxon_levels"),
-  names2concepts = c("sudamerica", "names2concepts"),
-  ...
-)
+\method{db2taxlist}{PostgreSQLConnection}(conn, taxonomy, subset_levels = TRUE, as_list = FALSE, ...)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
@@ -50,13 +15,8 @@ sam_tax(
 \item{...}{Further arguments passed among methods. In the two wrappers the
 arguments are passed to \code{db2taxlist}.}
 
-\item{taxon_names, taxon_relations, taxon_traits, taxon_views}{Character
-vectors indicating the name of the schema and the table containing the
-information for the respective slots.}
-
-\item{taxon_levels, names2concepts}{Character vectors indicating the name of
-schema and table indicating the taxonomic ranks and the correspondence of
-names to taxonomic concepts.}
+\item{taxonomy}{Character value with the name of the taxonomy in the
+database.}
 
 \item{subset_levels}{Logical value indicating whether taxonomic ranks should
 be restricted to the used ones or all ranks available in the database.}

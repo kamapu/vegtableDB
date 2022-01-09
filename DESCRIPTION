@@ -15,7 +15,8 @@ Imports:
 	foreign,
 	methods,
 	RPostgreSQL,
-	rpostgis
+	rpostgis,
+	sf
 Suggests:
 	devtools,
 	roxygen2
