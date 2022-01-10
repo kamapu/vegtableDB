@@ -23,6 +23,7 @@ style_pkg()
 # Document and build
 document()
 pkg_loc <- build(path = "build-pkg")
+build_manual(path = "build-pkg")
 
 # Check package
 check_built(path = pkg_loc)

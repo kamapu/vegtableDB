@@ -4,46 +4,23 @@
 \alias{insert_synonym}
 \alias{insert_synonym.PostgreSQLConnection}
 \alias{insert_synonym,PostgreSQLConnection-method}
-\alias{insert_synonym_swea}
 \title{Insert synonyms in PostgreSQL taxonomic lists}
 \usage{
 insert_synonym(conn, ...)
 
-\method{insert_synonym}{PostgreSQLConnection}(
-  conn,
-  taxon_names,
-  taxon_relations,
-  names2concepts,
-  df,
-  clean = TRUE,
-  ...
-)
-
-insert_synonym_swea(
-  conn,
-  taxon_names = c("tax_commons", "taxon_names"),
-  taxon_relations = c("swea_dataveg", "taxon_concepts"),
-  names2concepts = c("swea_dataveg", "names2concepts"),
-  df,
-  ...
-)
+\method{insert_synonym}{PostgreSQLConnection}(conn, taxonomy, df, clean = TRUE, ...)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
 
 \item{...}{Further arguments passed among methods.}
 
-\item{taxon_names}{A character vector of length 2 indicating the name of the
-respecitve schema and table in Postgres.}
+\item{taxonomy}{Character value with the name of the taxonomy in the
+database.}
 
-\item{taxon_relations}{taxon_names A character vector of length 2 indicating
-the name of the respecitve schema and table in Postgres.}
-
-\item{names2concepts}{taxon_names A character vector of length 2 indicating
-the name of the respecitve schema and table in Postgres.}
-
-\item{df}{A data frame with new names and related information (including
-taxon concept ID).}
+\item{df}{A data frame with new names and related information. Three columns
+are mandatory, \strong{usage_name} and \strong{author_name} as character vectors,
+and \strong{taxon_concept_id} as integer.}
 
 \item{clean}{A logical value, whether strings in input 'df' should be cleaned
 or not (see \code{\link[=clean_strings]{clean_strings()}}).}

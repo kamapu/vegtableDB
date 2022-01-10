@@ -49,12 +49,12 @@ db2taxlist.PostgreSQLConnection <- function(conn,
   names2concepts <- db_catalog[db_catalog$slot == "names2concepts", "name"]
   taxon_views <- db_catalog[db_catalog$slot == "taxon_views", "name"]
   Descr <- with(get_description(conn), paste(table_schema, table_name))
-  db_catalog <- as.data.frame(rbind(
-    taxon_names, taxon_relations, taxon_traits,
-    taxon_levels, names2concepts, taxon_views
-  ))
-  db_catalog <- paste(db_catalog[, 1], db_catalog[, 2])
   # TODO: taxonomy.taxon_levels was not appearing in the decription
+  ## db_catalog <- as.data.frame(rbind(
+  ##   taxon_names, taxon_relations, taxon_traits,
+  ##   taxon_levels, names2concepts, taxon_views
+  ## ))
+  ## db_catalog <- paste(db_catalog[, 1], db_catalog[, 2])
   ## if(!all(db_catalog %in% Descr))
   ##   stop("Some tables from the catalog are not occurring in the database.")
   # Import taxon names

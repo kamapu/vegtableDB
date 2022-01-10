@@ -10,14 +10,11 @@
 #' the PostgreSQL version of the database.
 #'
 #' @param conn A database connection provided by [dbConnect()].
-#' @param taxon_names A character vector of length 2 indicating the name of the
-#'     respecitve schema and table in Postgres.
-#' @param taxon_relations taxon_names A character vector of length 2 indicating
-#'     the name of the respecitve schema and table in Postgres.
-#' @param names2concepts taxon_names A character vector of length 2 indicating
-#'     the name of the respecitve schema and table in Postgres.
-#' @param df A data frame with new names and related information (including
-#'     taxon concept ID).
+#' @param taxonomy Character value with the name of the taxonomy in the
+#'     database.
+#' @param df A data frame with new names and related information. Three columns
+#'     are mandatory, **usage_name** and **author_name** as character vectors,
+#'     and **taxon_concept_id** as integer.
 #' @param clean A logical value, whether strings in input 'df' should be cleaned
 #'     or not (see [clean_strings()]).
 #' @param ... Further arguments passed among methods.
@@ -37,15 +34,10 @@ insert_synonym <- function(conn, ...) {
 #'
 #' @export
 insert_synonym.PostgreSQLConnection <- function(conn,
-                                                taxon_names,
-                                                taxon_relations,
-                                                names2concepts,
+                                                taxonomy,
                                                 df,
                                                 clean = TRUE,
                                                 ...) {
-  if (clean) {
-    df <- clean_strings(df)
-  }
   if (any(!c("taxon_concept_id", "usage_name", "author_name") %in%
     colnames(df))) {
     stop(paste(
@@ -53,6 +45,30 @@ insert_synonym.PostgreSQLConnection <- function(conn,
       "are mandatory in 'df'."
     ))
   }
+  if (clean) {
+    df <- clean_strings(df)
+  }
+  # Import catalog
+  if (!taxonomy %in% db_catalog$taxonomy$db) {
+    stop("The requested taxonomic list is not in the catalog.")
+  }
+  db_catalog <- db_catalog$taxonomy[
+    db_catalog$taxonomy$db == taxonomy,
+    c("slot", "name")
+  ]
+  taxon_names <- db_catalog[db_catalog$slot == "taxon_names", "name"]
+  taxon_relations <- db_catalog[db_catalog$slot == "taxon_concepts", "name"]
+  names2concepts <- db_catalog[db_catalog$slot == "names2concepts", "name"]
+  Descr <- with(get_description(conn), paste(table_schema, table_name))
+  # TODO: taxonomy.taxon_levels was not appearing in the decription
+  ## db_catalog <- as.data.frame(rbind(
+  ##         taxon_names, taxon_relations, taxon_traits,
+  ##         taxon_levels, names2concepts, taxon_views
+  ##     ))
+  ## db_catalog <- paste(db_catalog[, 1], db_catalog[, 2])
+  ## if(!all(db_catalog %in% Descr))
+  ##   stop("Some tables from the catalog are not occurring in the database.")
+  ## Cross-check
   # Required assets
   Query <- paste0(
     "SELECT taxon_usage_id, taxon_concept_id\n",
@@ -111,21 +127,4 @@ insert_synonym.PostgreSQLConnection <- function(conn,
   pgInsert(conn, names2concepts, df[, colnames(df) %in%
     c("taxon_usage_id", "taxon_concept_id", "name_status")])
   message("DONE!")
-}
-
-#' @rdname insert_synonym
-#'
-#' @aliases insert_synonym_swea
-#'
-#' @export insert_synonym_swea
-#'
-insert_synonym_swea <- function(conn,
-                                taxon_names = c("tax_commons", "taxon_names"),
-                                taxon_relations = c("swea_dataveg", "taxon_concepts"),
-                                names2concepts = c("swea_dataveg", "names2concepts"),
-                                df, ...) {
-  insert_synonym(
-    conn, taxon_names, taxon_relations, names2concepts,
-    df, ...
-  )
 }

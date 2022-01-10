@@ -10,11 +10,11 @@
 #' the PostgreSQL version of the database.
 #'
 #' @param conn A database connection provided by [dbConnect()].
-#' @param taxon_names,taxon_relations,names2concepts,taxon_views,taxon_levels
-#'     Character vectors indicating the name of the respective schemas and
-#'     tables in database.
-#' @param df A data frame with new names and related information (including
-#'     taxon concept ID).
+#' @param taxonomy Character value with the name of the taxonomy in the
+#'     database.
+#' @param df A data frame with new names and related information. Two columns
+#'     are mandatory, namely **usage_name** and **author_name**, both as
+#'     character vectors.
 #' @param clean A logical value indicating cleaning of characters.
 #' @param ... Further arguments passed among methods.
 #'
@@ -30,12 +30,11 @@ insert_concept <- function(conn, ...) {
 #' @aliases insert_concept,PostgreSQLConnection-method
 #'
 #' @export
-insert_concept.PostgreSQLConnection <- function(conn, taxon_names,
-                                                taxon_relations, names2concepts, taxon_views, taxon_levels, df,
-                                                clean = TRUE, ...) {
-  if (clean) {
-    df <- clean_strings(df)
-  }
+insert_concept.PostgreSQLConnection <- function(conn,
+                                                taxonomy,
+                                                df,
+                                                clean = TRUE,
+                                                ...) {
   if (any(!c("usage_name", "author_name") %in% colnames(df))) {
     stop(paste(
       "Columns 'usage_name' and 'author_name'",
@@ -48,6 +47,32 @@ insert_concept.PostgreSQLConnection <- function(conn, taxon_names,
       "Use 'insert_synonym()' instead"
     ))
   }
+  if (clean) {
+    df <- clean_strings(df)
+  }
+  # Import catalog
+  if (!taxonomy %in% db_catalog$taxonomy$db) {
+    stop("The requested taxonomic list is not in the catalog.")
+  }
+  db_catalog <- db_catalog$taxonomy[
+    db_catalog$taxonomy$db == taxonomy,
+    c("slot", "name")
+  ]
+  taxon_names <- db_catalog[db_catalog$slot == "taxon_names", "name"]
+  taxon_relations <- db_catalog[db_catalog$slot == "taxon_concepts", "name"]
+  taxon_traits <- db_catalog[db_catalog$slot == "taxon_attributes", "name"]
+  taxon_levels <- db_catalog[db_catalog$slot == "taxon_levels", "name"]
+  names2concepts <- db_catalog[db_catalog$slot == "names2concepts", "name"]
+  taxon_views <- db_catalog[db_catalog$slot == "taxon_views", "name"]
+  Descr <- with(get_description(conn), paste(table_schema, table_name))
+  # TODO: taxonomy.taxon_levels was not appearing in the decription
+  ## db_catalog <- as.data.frame(rbind(
+  ##         taxon_names, taxon_relations, taxon_traits,
+  ##         taxon_levels, names2concepts, taxon_views
+  ##     ))
+  ## db_catalog <- paste(db_catalog[, 1], db_catalog[, 2])
+  ## if(!all(db_catalog %in% Descr))
+  ##   stop("Some tables from the catalog are not occurring in the database.")
   ## Cross-check
   # 0: Required assets
   Query <- paste0(
@@ -151,55 +176,4 @@ insert_concept.PostgreSQLConnection <- function(conn, taxon_names,
   pgInsert(conn, names2concepts, df[, colnames(df) %in%
     c("taxon_usage_id", "taxon_concept_id", "name_status")])
   message("DONE!")
-}
-
-#' @rdname insert_concept
-#'
-#' @export
-insert_concept_swea <- function(conn, ...) {
-  UseMethod("insert_concept_swea", conn)
-}
-
-
-#' @rdname insert_concept
-#' @aliases insert_concept_swea insert_concept_swea,PostgreSQLConnection-method
-#'
-#' @export
-insert_concept_swea.PostgreSQLConnection <- function(conn,
-                                                     taxon_names = c("tax_commons", "taxon_names"),
-                                                     taxon_relations = c("swea_dataveg", "taxon_concepts"),
-                                                     names2concepts = c("swea_dataveg", "names2concepts"),
-                                                     taxon_views = c("bib_references", "main_table"),
-                                                     taxon_levels = c("tax_commons", "bb_levels"),
-                                                     df, ...) {
-  insert_concept(
-    conn, taxon_names, taxon_relations, names2concepts,
-    taxon_views, taxon_levels, df, ...
-  )
-}
-
-#' @rdname insert_concept
-#'
-#' @export
-insert_concept_ecoveg <- function(conn, ...) {
-  UseMethod("insert_concept_ecoveg", conn)
-}
-
-
-#' @rdname insert_concept
-#' @aliases insert_concept_ecoveg
-#'   insert_concept_ecoveg,PostgreSQLConnection-method
-#'
-#' @export
-insert_concept_ecoveg.PostgreSQLConnection <- function(conn,
-                                                       taxon_names = c("tax_commons", "ecoveg_f_names"),
-                                                       taxon_relations = c("syntax_ecoveg_f", "taxon_concepts"),
-                                                       names2concepts = c("syntax_ecoveg_f", "names2concepts"),
-                                                       taxon_views = c("bib_references", "main_table"),
-                                                       taxon_levels = c("tax_commons", "ecoveg_f_levels"),
-                                                       df, ...) {
-  insert_concept(
-    conn, taxon_names, taxon_relations, names2concepts,
-    taxon_views, taxon_levels, df, ...
-  )
 }

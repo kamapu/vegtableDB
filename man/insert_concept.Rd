@@ -4,64 +4,23 @@
 \alias{insert_concept}
 \alias{insert_concept.PostgreSQLConnection}
 \alias{insert_concept,PostgreSQLConnection-method}
-\alias{insert_concept_swea}
-\alias{insert_concept_swea.PostgreSQLConnection}
-\alias{insert_concept_swea,PostgreSQLConnection-method}
-\alias{insert_concept_ecoveg}
-\alias{insert_concept_ecoveg.PostgreSQLConnection}
-\alias{insert_concept_ecoveg,PostgreSQLConnection-method}
 \title{Insert names or concepts in PostgreSQL taxonomic lists}
 \usage{
 insert_concept(conn, ...)
 
-\method{insert_concept}{PostgreSQLConnection}(
-  conn,
-  taxon_names,
-  taxon_relations,
-  names2concepts,
-  taxon_views,
-  taxon_levels,
-  df,
-  clean = TRUE,
-  ...
-)
-
-insert_concept_swea(conn, ...)
-
-\method{insert_concept_swea}{PostgreSQLConnection}(
-  conn,
-  taxon_names = c("tax_commons", "taxon_names"),
-  taxon_relations = c("swea_dataveg", "taxon_concepts"),
-  names2concepts = c("swea_dataveg", "names2concepts"),
-  taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "bb_levels"),
-  df,
-  ...
-)
-
-insert_concept_ecoveg(conn, ...)
-
-\method{insert_concept_ecoveg}{PostgreSQLConnection}(
-  conn,
-  taxon_names = c("tax_commons", "ecoveg_f_names"),
-  taxon_relations = c("syntax_ecoveg_f", "taxon_concepts"),
-  names2concepts = c("syntax_ecoveg_f", "names2concepts"),
-  taxon_views = c("bib_references", "main_table"),
-  taxon_levels = c("tax_commons", "ecoveg_f_levels"),
-  df,
-  ...
-)
+\method{insert_concept}{PostgreSQLConnection}(conn, taxonomy, df, clean = TRUE, ...)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
 
 \item{...}{Further arguments passed among methods.}
 
-\item{taxon_names, taxon_relations, names2concepts, taxon_views, taxon_levels}{Character vectors indicating the name of the respective schemas and
-tables in database.}
+\item{taxonomy}{Character value with the name of the taxonomy in the
+database.}
 
-\item{df}{A data frame with new names and related information (including
-taxon concept ID).}
+\item{df}{A data frame with new names and related information. Two columns
+are mandatory, namely \strong{usage_name} and \strong{author_name}, both as
+character vectors.}
 
 \item{clean}{A logical value indicating cleaning of characters.}
 }
