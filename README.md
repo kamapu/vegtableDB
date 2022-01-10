@@ -1,13 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
 <!-- Use snippet 'render_markdown' for it -->
 
-# vegtable2
+# vegtableDB
 
 <!-- badges: start -->
-
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/vegtable2)](https://cran.r-project.org/package=vegtable2)
 <!-- badges: end -->
 
 This is a package with functions for the internal use and adapted to own
@@ -24,5 +21,5 @@ you just need to execute following commands in your R-session:
 
 ``` r
 library(devtools)
-install_github("kamapu/vegtable2")
+install_github("kamapu/vegtableDB")
 ```
