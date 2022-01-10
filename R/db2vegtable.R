@@ -163,6 +163,7 @@ db2vegtable.PostgreSQLConnection <- function(conn,
       data_source = NA,
       read_pg(conn, name = "bib_references", main_table = "main_table")
     )
+    class(veg_obj$relations$data_source) <- c("lib_df", "data.frame")
     veg_obj$relations$data_source <- with(veg_obj$relations, {
       data_source <- data_source[data_source$bibtexkey %in%
         veg_obj$header$bibtexkey, ]
