@@ -9,8 +9,12 @@
 #' This function has been modified to a new version of the database.
 #'
 #' @param conn A database connection provided by [dbConnect()].
-#' @param taxonomy Character value with the name of the taxonomy in the
-#'     database.
+#' @param taxon_names,taxon_relations,taxon_traits,taxon_views Character
+#'     vectors indicating the name of the schema and the table containing the
+#'     information for the respective slots.
+#' @param taxon_levels,names2concepts Character vectors indicating the name of
+#'     schema and table indicating the taxonomic ranks and the correspondence of
+#'     names to taxonomic concepts.
 #' @param subset_levels Logical value indicating whether taxonomic ranks should
 #'     be restricted to the used ones or all ranks available in the database.
 #' @param as_list Logical value indicating whether the output should be a list
@@ -27,38 +31,14 @@ db2taxlist <- function(conn, ...) {
 
 #' @rdname db2taxlist
 #' @export
-db2taxlist.PostgreSQLConnection <- function(conn,
-                                            taxonomy,
+db2taxlist.PostgreSQLConnection <- function(conn, taxon_names, taxon_relations,
+                                            taxon_traits, taxon_levels,
+                                            taxon_views, names2concepts,
                                             subset_levels = TRUE,
-                                            as_list = FALSE,
-                                            ...) {
+                                            as_list = FALSE, ...) {
   species_obj <- list()
-  # Import catalog
-  message("Importing catalog ... ", appendLF = FALSE)
-  if (!taxonomy %in% db_catalog$taxonomy$db) {
-    stop("The requested taxonomic list is not in the catalog.")
-  }
-  db_catalog <- db_catalog$taxonomy[
-    db_catalog$taxonomy$db == taxonomy,
-    c("slot", "name")
-  ]
-  taxon_names <- db_catalog[db_catalog$slot == "taxon_names", "name"]
-  taxon_relations <- db_catalog[db_catalog$slot == "taxon_concepts", "name"]
-  taxon_traits <- db_catalog[db_catalog$slot == "taxon_attributes", "name"]
-  taxon_levels <- db_catalog[db_catalog$slot == "taxon_levels", "name"]
-  names2concepts <- db_catalog[db_catalog$slot == "names2concepts", "name"]
-  taxon_views <- db_catalog[db_catalog$slot == "taxon_views", "name"]
-  Descr <- with(get_description(conn), paste(table_schema, table_name))
-  # TODO: taxonomy.taxon_levels was not appearing in the decription
-  ## db_catalog <- as.data.frame(rbind(
-  ##   taxon_names, taxon_relations, taxon_traits,
-  ##   taxon_levels, names2concepts, taxon_views
-  ## ))
-  ## db_catalog <- paste(db_catalog[, 1], db_catalog[, 2])
-  ## if(!all(db_catalog %in% Descr))
-  ##   stop("Some tables from the catalog are not occurring in the database.")
   # Import taxon names
-  message("OK\nImporting taxon names ... ", appendLF = FALSE)
+  message("Importing taxon names...")
   Query <- paste0(
     "SELECT *\n",
     "FROM \"", paste(taxon_names, collapse = "\".\""), "\";\n"
@@ -70,7 +50,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
       new = c("TaxonUsageID", "TaxonName", "AuthorName")
     )
   # Import taxon concepts
-  message("OK\nImporting taxon concepts ... ", appendLF = FALSE)
+  message("Importing taxon concepts...")
   Query <- paste0(
     "SELECT *\n",
     "FROM \"", paste(taxon_relations, collapse = "\".\""), "\";\n"
@@ -155,9 +135,9 @@ db2taxlist.PostgreSQLConnection <- function(conn,
     species_obj$taxonTraits <- data.frame(TaxonConceptID = integer(0))
   }
   # Import taxon views
-  message("OK\nImporting taxon views ... ", appendLF = FALSE)
+  message("Importing taxon views...")
   # TODO: Next command may need more arguments to be set
-  species_obj$taxonViews <- read_pg(conn,
+  species_obj$taxonViews <- biblioDB::read_pg(conn,
     name = taxon_views[1],
     main_table = taxon_views[2]
   )
@@ -190,7 +170,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
     c("ViewID", colnames(taxonViews)[colnames(taxonViews) !=
       "ViewID"])
   ])
-  message("OK\nDONE!\n")
+  message("DONE!\n")
   if (as_list) {
     invisible(species_obj)
   } else {
@@ -207,4 +187,46 @@ db2taxlist.PostgreSQLConnection <- function(conn,
     )
     return(species_obj)
   }
+}
+
+#' @rdname db2taxlist
+#'
+#' @aliases swea_tax
+#'
+#' @export
+swea_tax <- function(conn,
+                     taxon_names = c("tax_commons", "taxon_names"),
+                     taxon_relations = c("swea_dataveg", "taxon_concepts"),
+                     taxon_traits = c("swea_dataveg", "taxon_attributes"),
+                     taxon_views = c("bib_references", "main_table"),
+                     taxon_levels = c("tax_commons", "taxon_levels"),
+                     names2concepts = c("swea_dataveg", "names2concepts"),
+                     ...) {
+  db2taxlist(
+    conn = conn, taxon_names = taxon_names,
+    taxon_relations = taxon_relations, taxon_traits = taxon_traits,
+    taxon_views = taxon_views, taxon_levels = taxon_levels,
+    names2concepts = names2concepts, ...
+  )
+}
+
+#' @rdname db2taxlist
+#'
+#' @aliases sam_tax
+#'
+#' @export
+sam_tax <- function(conn,
+                    taxon_names = c("tax_commons", "taxon_names"),
+                    taxon_relations = c("sudamerica", "taxon_concepts"),
+                    taxon_traits = c("sudamerica", "taxon_attributes"),
+                    taxon_views = c("bib_references", "main_table"),
+                    taxon_levels = c("tax_commons", "taxon_levels"),
+                    names2concepts = c("sudamerica", "names2concepts"),
+                    ...) {
+  db2taxlist(
+    conn = conn, taxon_names = taxon_names,
+    taxon_relations = taxon_relations, taxon_traits = taxon_traits,
+    taxon_views = taxon_views, taxon_levels = taxon_levels,
+    names2concepts = names2concepts, ...
+  )
 }
