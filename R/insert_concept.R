@@ -64,7 +64,7 @@ insert_concept.PostgreSQLConnection <- function(conn,
   taxon_levels <- db_catalog[db_catalog$slot == "taxon_levels", "name"]
   names2concepts <- db_catalog[db_catalog$slot == "names2concepts", "name"]
   taxon_views <- db_catalog[db_catalog$slot == "taxon_views", "name"]
-  Descr <- with(get_description(conn), paste(table_schema, table_name))
+  ## Descr <- get_description(conn)
   # TODO: taxonomy.taxon_levels was not appearing in the decription
   ## db_catalog <- as.data.frame(rbind(
   ##         taxon_names, taxon_relations, taxon_traits,
@@ -165,15 +165,15 @@ insert_concept.PostgreSQLConnection <- function(conn,
   pgInsert(
     conn, taxon_names,
     df[!df$taxon_usage_id %in% t_names$taxon_usage_id, colnames(df) %in%
-      c("taxon_usage_id", "usage_name", "author_name")]
+      c("taxon_usage_id", "usage_name", "author_name"), drop = FALSE]
   )
   # 2: insert concepts
   pgInsert(conn, taxon_relations, df[, colnames(df) %in% c(
     "taxon_concept_id",
     "parent_id", "rank", "view_key"
-  )])
+  ), drop = FALSE])
   # 3: insert names2concepts
   pgInsert(conn, names2concepts, df[, colnames(df) %in%
-    c("taxon_usage_id", "taxon_concept_id", "name_status")])
+    c("taxon_usage_id", "taxon_concept_id", "name_status"), drop = FALSE])
   message("DONE!")
 }

@@ -121,10 +121,10 @@ insert_synonym.PostgreSQLConnection <- function(conn,
   pgInsert(
     conn, taxon_names,
     df[!df$taxon_usage_id %in% t_names$taxon_usage_id, colnames(df) %in%
-      c("taxon_usage_id", "usage_name", "author_name")]
+      c("taxon_usage_id", "usage_name", "author_name"), drop = FALSE]
   )
   # 2: insert names2concepts
   pgInsert(conn, names2concepts, df[, colnames(df) %in%
-    c("taxon_usage_id", "taxon_concept_id", "name_status")])
+    c("taxon_usage_id", "taxon_concept_id", "name_status"), drop = FALSE])
   message("DONE!")
 }
