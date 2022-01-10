@@ -143,7 +143,6 @@ db2vegtable.PostgreSQLConnection <- function(conn,
     veg_obj$layers <- list()
   }
   # relations ------------------------------------------------------------------
-  # TODO: routine for import of data sources
   if (length(relations) > 0) {
     veg_obj$relations <- list()
     for (i in names(relations)) {
@@ -156,6 +155,25 @@ db2vegtable.PostgreSQLConnection <- function(conn,
     }
   } else {
     veg_obj$relations <- list()
+  }
+  # data sources ---------------------------------------------------------------
+  if ("bibtexkey" %in% colnames(veg_obj$header)) {
+    message("OK\nImporting source references ... ", appendLF = FALSE)
+    veg_obj$relations$data_source <- cbind(
+      data_source = NA,
+      read_pg(conn, name = "bib_references", main_table = "main_table")
+    )
+    veg_obj$relations$data_source <- with(veg_obj$relations, {
+      data_source <- data_source[data_source$bibtexkey %in%
+        veg_obj$header$bibtexkey, ]
+      data_source$data_source <- 1:nrow(data_source)
+      data_source
+    })
+    veg_obj$header$data_source <- with(
+      veg_obj$relations$data_source,
+      data_source[match(veg_obj$header$bibtexkey, bibtexkey)]
+    )
+    veg_obj$header <- veg_obj$header[, colnames(veg_obj$header) != "bibtexkey"]
   }
   # coverconvert ---------------------------------------------------------------
   message("OK\nImporting cover conversion tables ... ", appendLF = FALSE)

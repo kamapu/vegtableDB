@@ -157,7 +157,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
   # Import taxon views
   message("OK\nImporting taxon views ... ", appendLF = FALSE)
   # TODO: Next command may need more arguments to be set
-  species_obj$taxonViews <- biblioDB::read_pg(conn,
+  species_obj$taxonViews <- read_pg(conn,
     name = taxon_views[1],
     main_table = taxon_views[2]
   )
