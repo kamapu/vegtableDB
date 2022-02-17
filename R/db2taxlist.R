@@ -27,79 +27,60 @@ db2taxlist <- function(conn, ...) {
 
 #' @rdname db2taxlist
 #' @export
-db2taxlist.PostgreSQLConnection <- function(conn,
-                                            taxonomy,
-                                            subset_levels = TRUE,
-                                            as_list = FALSE,
-                                            ...) {
+db2taxlist.PostgreSQLConnection <- function(conn, taxonomy,
+    schema = "plant_taxonomy", subset_levels = TRUE, as_list = FALSE, ...) {
   species_obj <- list()
   # Import catalog
-  message("Importing catalog ... ", appendLF = FALSE)
-  if (!taxonomy %in% db_catalog$taxonomy$db) {
-    stop("The requested taxonomic list is not in the catalog.")
+  message("Check conditions ... ", appendLF = FALSE)
+  db_names <- unique(unlist(dbGetQuery(conn,
+              paste("select top_view",
+                  paste0("from \"", schema, "\".taxon_concepts")))))
+  if (!taxonomy %in% db_names) {
+    stop("The requested taxonomic list is not in the connected database.")
   }
-  db_catalog <- db_catalog$taxonomy[
-    db_catalog$taxonomy$db == taxonomy,
-    c("slot", "name")
-  ]
-  taxon_names <- db_catalog[db_catalog$slot == "taxon_names", "name"]
-  taxon_relations <- db_catalog[db_catalog$slot == "taxon_concepts", "name"]
-  taxon_traits <- db_catalog[db_catalog$slot == "taxon_attributes", "name"]
-  taxon_levels <- db_catalog[db_catalog$slot == "taxon_levels", "name"]
-  names2concepts <- db_catalog[db_catalog$slot == "names2concepts", "name"]
-  taxon_views <- db_catalog[db_catalog$slot == "taxon_views", "name"]
-  Descr <- with(get_description(conn), paste(table_schema, table_name))
-  # TODO: taxonomy.taxon_levels was not appearing in the decription
-  ## db_catalog <- as.data.frame(rbind(
-  ##   taxon_names, taxon_relations, taxon_traits,
-  ##   taxon_levels, names2concepts, taxon_views
-  ## ))
-  ## db_catalog <- paste(db_catalog[, 1], db_catalog[, 2])
-  ## if(!all(db_catalog %in% Descr))
-  ##   stop("Some tables from the catalog are not occurring in the database.")
-  # Import taxon names
-  message("OK\nImporting taxon names ... ", appendLF = FALSE)
-  Query <- paste0(
-    "SELECT *\n",
-    "FROM \"", paste(taxon_names, collapse = "\".\""), "\";\n"
-  )
-  species_obj$taxonNames <- dbGetQuery(conn, Query)
-  colnames(species_obj$taxonNames) <-
-    replace_x(colnames(species_obj$taxonNames),
-      old = c("taxon_usage_id", "usage_name", "author_name"),
-      new = c("TaxonUsageID", "TaxonName", "AuthorName")
-    )
   # Import taxon concepts
   message("OK\nImporting taxon concepts ... ", appendLF = FALSE)
-  Query <- paste0(
-    "SELECT *\n",
-    "FROM \"", paste(taxon_relations, collapse = "\".\""), "\";\n"
-  )
+  Query <- paste(
+      "select",
+      "taxon_concept_id \"TaxonConceptID\",",
+      "parent_id \"Parent\",",
+      "rank \"Level\",",
+      "view_key",
+      paste0("from \"", schema, "\".taxon_concepts"),
+      paste0("where top_view = '", taxonomy, "'")
+          )
   species_obj$taxonRelations <- dbGetQuery(conn, Query)
-  colnames(species_obj$taxonRelations) <-
-    replace_x(colnames(species_obj$taxonRelations),
-      old = c("taxon_concept_id", "parent_id", "rank"),
-      new = c("TaxonConceptID", "Parent", "Level")
-    )
   # Link names and concepts
-  Query <- paste0(
-    "SELECT *\n",
-    "FROM \"", paste(names2concepts, collapse = "\".\""), "\";\n"
+  Query <- paste(
+      "select",
+      "taxon_usage_id \"TaxonUsageID\",",
+      "taxon_concept_id \"TaxonConceptID\",",
+      "name_status \"NameStatus\"",
+      paste0("from \"", schema, "\".names2concepts"),
+      paste0("where taxon_concept_id in (",
+          paste0(species_obj$taxonRelations$TaxonConceptID, collapse = ","),
+          ")")
   )
   concepts <- dbGetQuery(conn, Query)
-  colnames(concepts) <- replace_x(colnames(concepts),
-    old = c("taxon_usage_id", "taxon_concept_id", "name_status"),
-    new = c("TaxonUsageID", "TaxonConceptID", "NameStatus")
+  # Import taxon names
+  message("OK\nImporting taxon names ... ", appendLF = FALSE)
+  Query <- paste(
+      "select",
+      "taxon_usage_id \"TaxonUsageID\",",
+      "usage_name \"TaxonName\",",
+      "author_name \"AuthorName\"",
+      paste0("from \"", schema, "\".taxon_names"),
+      paste0("where taxon_usage_id in (",
+          paste0(concepts$TaxonUsageID, collapse = ","),
+          ")")
   )
+  species_obj$taxonNames <- dbGetQuery(conn, Query)
+  # Link names and concepts
   species_obj$taxonNames$TaxonConceptID <-
-    concepts$TaxonConceptID[match(
-      species_obj$taxonNames$TaxonUsageID,
-      concepts$TaxonUsageID
-    )]
-  species_obj$taxonNames <-
-    species_obj$taxonNames[
-      !is.na(species_obj$taxonNames$TaxonConceptID),
-    ]
+      concepts$TaxonConceptID[match(
+              species_obj$taxonNames$TaxonUsageID,
+              concepts$TaxonUsageID
+          )]
   # Add status (accepted names)
   species_obj$taxonRelations$AcceptedName <-
     with(
@@ -122,15 +103,13 @@ db2taxlist.PostgreSQLConnection <- function(conn,
       ]
     )
   # Retrieve levels
-  Query <- paste0(
-    "SELECT *\n",
-    "FROM \"", paste(taxon_levels, collapse = "\".\""), "\";\n"
+  Query <- paste(
+      "select",
+      "rank \"Level\",",
+      "rank_idx rank",
+      paste0("from \"", schema, "\".taxon_levels")
   )
   tax_levels <- dbGetQuery(conn, Query)
-  colnames(tax_levels) <- replace_x(colnames(tax_levels),
-    old = c("rank", "rank_idx"),
-    new = c("Level", "rank")
-  )
   if (subset_levels) {
     tax_levels <- tax_levels[tax_levels$Level %in%
       species_obj$taxonRelations$Level, ]
@@ -141,26 +120,25 @@ db2taxlist.PostgreSQLConnection <- function(conn,
     tax_levels$Level
   )
   # Retrieve taxon traits
-  if (!missing(taxon_traits)) {
-    Query <- paste0(
-      "SELECT *\n",
-      "FROM \"", paste(taxon_traits, collapse = "\".\""), "\";\n"
-    )
-    species_obj$taxonTraits <- dbGetQuery(conn, Query)
-    colnames(species_obj$taxonTraits) <-
+  Query <- paste(
+      "select *",
+      paste0("from \"", schema, "\".taxon_attributes"),
+      paste0("where taxon_concept_id in (",
+          paste0(species_obj$taxonRelations$TaxonConceptID, collapse = ","),
+          ")")
+  )
+  species_obj$taxonTraits <- dbGetQuery(conn, Query)
+  colnames(species_obj$taxonTraits) <-
       replace_x(colnames(species_obj$taxonTraits),
-        old = "taxon_concept_id", new = "TaxonConceptID"
+          old = "taxon_concept_id", new = "TaxonConceptID"
       )
-  } else {
-    species_obj$taxonTraits <- data.frame(TaxonConceptID = integer(0))
-  }
+  species_obj$taxonTraits <- with(species_obj,
+      taxonTraits[ , apply(taxonTraits, 2, function(x) !all(is.na(x)))])
   # Import taxon views
   message("OK\nImporting taxon views ... ", appendLF = FALSE)
   # TODO: Next command may need more arguments to be set
-  species_obj$taxonViews <- read_pg(conn,
-    name = taxon_views[1],
-    main_table = taxon_views[2]
-  )
+  species_obj$taxonViews <- read_pg(conn, name = "bib_references",
+      main_table = "main_table")
   species_obj$taxonViews <- with(species_obj, {
     taxonViews <- taxonViews[taxonViews$bibtexkey %in%
       taxonRelations$view_key, ]
