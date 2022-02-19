@@ -12,14 +12,10 @@
 #' `header_schema`.
 #'
 #' @param conn A database connection provided by [dbConnect()].
-#' @param database A character value indicating the name of the database to be
+#' @param database Character value indicating the name of the database to be
 #'     imported.
-#' @param description Named vector with metadata.
-#' @param geometry Name of the variable in header containing the geometry of
-#'     the plots.
-#' @param header_cols A character vector with the names of the columns required.
-#' @param simplify_header A logical value indicating whether empty columns
-#'     should be deleted from slot header or not.
+#' @param geometry Character vectors indicating the name of the variables
+#'     stored as geometries in PostGIS.
 #' @param as_list Logical value indicating whether a list or an object of class
 #'     [vegtable-class] should be returned.
 #' @param ... Further arguments passed to [db2taxlist()].
@@ -35,126 +31,114 @@ db2vegtable <- function(conn, ...) {
 #' @export
 db2vegtable.PostgreSQLConnection <- function(conn,
                                              database,
-                                             description,
                                              geometry = "plot_centroid",
-                                             header_cols,
-                                             simplify_header = TRUE,
                                              as_list = FALSE,
                                              ...) {
   veg_obj <- list()
-  # description
-  # TODO: Description can be also considered in the database
-  if (!missing(description)) {
-    veg_obj$description <- description
-  } else {
-    veg_obj$description <- c(remark = "Object imported by 'db2vegtable()'.")
-  }
-  # Import catalog
-  message("Importing catalog ... ", appendLF = FALSE)
-  if (!database %in% db_catalog$databases$db) {
-    stop("The requested taxonomic list is not in the catalog.")
-  }
-  taxonomy <- with(db_catalog$databases, name[db == database &
-    slot == "taxonomy"])
-  db_catalog$databases <- with(db_catalog, databases[
-    databases$db == database & databases$slot != "taxonomy",
-    c("slot", "name")
-  ])
-  db_catalog$relations <- with(db_catalog, relations[
-    relations$db == database,
-    c("slot", "subslot", "name")
-  ])
-  db_catalog$relations <- with(
-    db_catalog,
-    split(relations[, c("subslot", "name")], relations$slot)
+  # get tables and schemas
+  message("Importing metadata ... ", appendLF = FALSE)
+  Query <- paste(
+    "select table_schema schema,table_name table",
+    "from information_schema.tables", "where is_insertable_into = 'YES'"
   )
-  header <- with(db_catalog, databases[databases$slot == "header", "name"])
-  samples <- with(db_catalog, databases[databases$slot == "samples", "name"])
-  if ("veg_relations" %in% names(db_catalog$relations)) {
-    relations <- with(db_catalog$relations, {
-      relations <- list()
-      for (i in unique(veg_relations$subslot)) {
-        relations[[i]] <- veg_relations[veg_relations$subslot == i, "name"]
-      }
-      relations
-    })
-  } else {
-    relations <- list()
-  }
-  if ("veg_layers" %in% names(db_catalog$relations)) {
-    layers <- with(db_catalog$relations, {
-      layers <- list()
-      for (i in unique(veg_layers$subslot)) {
-        layers[[i]] <- veg_layers[veg_layers$subslot == i, "name"]
-      }
-      layers
-    })
-  } else {
-    layers <- list()
-  }
-  Descr <- get_description(conn)
-  # TODO: Test occurrence of requested tables
+  db_tables <- dbGetQuery(conn, Query)
+  # description ----------------------------------------------------------------
+  Query <- paste(
+    "select *", "from environment.databases",
+    paste0("where db_name = '", database, "'")
+  )
+  veg_obj$description <- unlist(dbGetQuery(conn, Query))
   # species --------------------------------------------------------------------
-  message(paste0("OK\nImporting taxonomy from '", taxonomy, "' ... "),
-    appendLF = FALSE
-  )
-  suppressMessages(veg_obj$species <- db2taxlist(conn, taxonomy, ...))
+  message("OK\nImporting taxonomic list ... ", appendLF = FALSE)
+  suppressMessages(veg_obj$species <- db2taxlist(conn,
+    taxonomy = veg_obj$description["taxonomy"], ...
+  ))
   # header ---------------------------------------------------------------------
-  message("OK\nImporting vegtable body ... ", appendLF = FALSE)
-  if (missing(header_cols)) {
-    header_cols <- with(Descr, column_name[table_schema == header[1] &
-      table_name == header[2]])
+  message("OK\nImporting header table and relations ... ", appendLF = FALSE)
+  Query <- paste(
+    "select column_name", "from information_schema.columns",
+    "where table_schema = 'environment'", "and table_name = 'header'"
+  )
+  header_cols <- unlist(dbGetQuery(conn, Query))
+  if (!geometry %in% header_cols) {
+    stop(paste0(
+      "Wrong value for 'geometry': Variable '", geometry,
+      "' not occurring in table 'header'."
+    ))
   }
-  header_cols <- unique(c("releve_id", header_cols))
-  if (!missing(geometry)) {
-    header_cols <- header_cols[!header_cols %in% geometry]
-  }
-  Query <- paste0(
-    "SELECT \"", paste0(header_cols, collapse = "\",\""), "\"\n",
-    "FROM \"", paste0(header, collapse = "\".\""), "\";\n"
+  header_cols <- header_cols[header_cols != geometry]
+  Query <- paste(
+    "select", paste0(header_cols, collapse = ","),
+    "from environment.\"header\"",
+    paste0("where db_name ='", database, "'")
   )
   veg_obj$header <- dbGetQuery(conn, Query)
-  if (simplify_header) {
-    veg_obj$header <- veg_obj$header[, apply(
-      veg_obj$header, 2,
-      function(x) !all(is.na(x))
-    )]
+  veg_obj$header <- veg_obj$header[, apply(
+    veg_obj$header, 2,
+    function(x) !all(is.na(x))
+  )]
+  colnames(veg_obj$header)[colnames(veg_obj$header) == "releve_id"] <-
+    "ReleveID"
+  # Importing relations --------------------------------------------------------
+  rel_names <- with(db_tables, table[schema == "environment" &
+    table %in% names(veg_obj$header)])
+  veg_obj$relations <- list()
+  if (length(rel_names) > 0) {
+    for (i in rel_names) {
+      veg_obj$relations[[i]] <- dbGetQuery(
+        conn,
+        paste(
+          "select *",
+          paste0("from environment.\"", i, "\"")
+        )
+      )
+    }
   }
-  # samples --------------------------------------------------------------------
-  Query <- paste0(
-    "SELECT *\n",
-    "FROM \"", paste(samples, collapse = "\".\""), "\"\n",
-    "WHERE releve_id IN (", paste0(veg_obj$header$releve_id,
-      collapse = ","
-    ), ");\n"
+  # Importing samples ----------------------------------------------------------
+  message("OK\nImporting samples' records and layers ... ", appendLF = FALSE)
+  Query <- paste(
+    "select *", "from records.samples",
+    paste0(
+      "where releve_id in (",
+      paste0(veg_obj$header$ReleveID, collapse = ","), ")"
+    )
   )
   veg_obj$samples <- dbGetQuery(conn, Query)
-  # layers ---------------------------------------------------------------------
-  if (length(layers) > 0) {
-    veg_obj$layers <- list()
-    for (i in names(layers)) {
-      Query <- paste0(
-        "SELECT *\n",
-        "FROM \"", paste(layers[[i]], collapse = "\".\""), "\";\n"
+  Query <- paste(
+    "select tax_id,taxon_usage_id",
+    "from plant_taxonomy.names2concepts",
+    paste0(
+      "where tax_id in (",
+      paste0(veg_obj$samples$tax_id, collapse = ","), ")"
+    )
+  )
+  Tax <- dbGetQuery(conn, Query)
+  veg_obj$samples$TaxonUsageID <- with(
+    veg_obj$samples,
+    Tax$taxon_usage_id[match(tax_id, Tax$tax_id)]
+  )
+  colnames(veg_obj$samples)[colnames(veg_obj$samples) == "releve_id"] <-
+    "ReleveID"
+  veg_obj$samples <- veg_obj$samples[, apply(
+    veg_obj$samples, 2,
+    function(x) !all(is.na(x))
+  )]
+  # Delete tax_id from samples
+  veg_obj$samples <- veg_obj$samples[, names(veg_obj$samples) != "tax_id"]
+  # Import layers --------------------------------------------------------------
+  lay_names <- with(db_tables, table[schema == "records" &
+    table %in% names(veg_obj$samples)])
+  veg_obj$layers <- list()
+  if (length(lay_names) > 0) {
+    for (i in lay_names) {
+      veg_obj$layers[[i]] <- dbGetQuery(
+        conn,
+        paste(
+          "select *",
+          paste0("from records.\"", i, "\"")
+        )
       )
-      veg_obj$layers[[i]] <- dbGetQuery(conn, Query)
     }
-  } else {
-    veg_obj$layers <- list()
-  }
-  # relations ------------------------------------------------------------------
-  if (length(relations) > 0) {
-    veg_obj$relations <- list()
-    for (i in names(relations)) {
-      Query <- paste0(
-        "SELECT *\n",
-        "FROM \"", paste(relations[[i]], collapse = "\".\""),
-        "\";\n"
-      )
-      veg_obj$relations[[i]] <- dbGetQuery(conn, Query)
-    }
-  } else {
-    veg_obj$relations <- list()
   }
   # data sources ---------------------------------------------------------------
   if ("bibtexkey" %in% colnames(veg_obj$header)) {
@@ -178,15 +162,12 @@ db2vegtable.PostgreSQLConnection <- function(conn,
   }
   # coverconvert ---------------------------------------------------------------
   message("OK\nImporting cover conversion tables ... ", appendLF = FALSE)
-  c_tables <- with(Descr, unique(table_name[table_schema == "coverconvert" &
-    table_name %in% colnames(veg_obj$samples)]))
+  c_tables <- with(db_tables, table[schema == "coverconvert" &
+    table %in% names(veg_obj$samples)])
   veg_obj$coverconvert <- new("coverconvert")
   if (length(c_tables) > 0) {
     for (i in c_tables) {
-      Query <- paste0(
-        "SELECT *\n",
-        "FROM \"coverconvert\".\"", i, "\";\n"
-      )
+      Query <- paste("select *", paste0("from coverconvert.\"", i, "\""))
       cover_tab <- dbGetQuery(conn, Query)
       # TODO: replace next code by a function of vegtable 'df2codeconvert()'
       veg_obj$coverconvert@value[[i]] <- with(
@@ -200,28 +181,20 @@ db2vegtable.PostgreSQLConnection <- function(conn,
     }
   }
   # geometry -------------------------------------------------------------------
-  # Code for renaming geometry in sf objects
-  # https://gis.stackexchange.com/questions/386584/sf-geometry-column-naming-differences-r
-  rename_geometry <- function(g, name) {
-    current <- attr(g, "sf_column")
-    names(g)[names(g) == current] <- name
-    st_geometry(g) <- name
-    return(g)
-  }
   if (!is.null(geometry)) {
     message("OK\nImporting geometries ... ", appendLF = FALSE)
     for (i in geometry) {
       # TODO: Test table with empty cells for geometry
-      Query <- paste0(
-        "SELECT releve_id,\"", geometry, "\"\n",
-        "FROM \"", paste0(header, collapse = "\".\""), "\"\n",
-        "WHERE releve_id IN (",
-        paste0(veg_obj$header$releve_id, collapse = ","), ");\n"
+      Query <- paste(
+        paste0("select releve_id,\"", geometry, "\""),
+        paste0("from environment.\"header\""),
+        paste0("where releve_id in (", paste0(veg_obj$header$ReleveID,
+          collapse = ","
+        ), ")")
       )
       t_geometry <- st_read(conn, query = Query)
-      t_geometry <- rename_geometry(t_geometry, "the_geometry")
+      st_geometry(t_geometry) <- "the_geometry"
       t_geometry[[i]] <- 1:nrow(t_geometry)
-
       veg_obj$header[, i] <- with(
         t_geometry,
         get(i)[match(veg_obj$header$releve_id, releve_id)]
@@ -230,27 +203,44 @@ db2vegtable.PostgreSQLConnection <- function(conn,
     }
   }
   # syntax ---------------------------------------------------------------------
-  t_syntax <- with(veg_obj, gsub("syntax_", "", colnames(header)[
-    grepl("syntax_", colnames(header),
-      fixed = TRUE
-    )
-  ], fixed = TRUE))
-  t_syntax <- t_syntax[t_syntax %in% db_catalog$taxonomy$db]
   veg_obj$syntax <- list()
+  t_syntax <- colnames(veg_obj$header)[grepl("syntax_",
+    colnames(veg_obj$header),
+    fixed = TRUE
+  )]
   if (length(t_syntax) > 0) {
     message("OK\nImporting syntaxonomies ... ", appendLF = FALSE)
-    for (i in t_syntax) {
-      suppressMessages(veg_obj$syntax[[i]] <- db2taxlist(conn, i))
+    t_syntax <- str_split(t_syntax, "_")
+    t_syntax <- lapply(t_syntax, function(x) {
+      c(
+        name = paste(x[2], x[3], sep = "_"),
+        approach = paste(x[1], x[2], sep = "_"),
+        taxonomy = x[3],
+        header = paste(x[1], x[2], x[3], sep = "_")
+      )
+    })
+    t_syntax <- as.data.frame(do.call(rbind, t_syntax),
+      stringsAsFactors = FALSE
+    )
+    for (i in 1:nrow(t_syntax)) {
+      suppressMessages(veg_obj$syntax[[t_syntax$name[i]]] <- with(
+        t_syntax,
+        db2taxlist(conn, taxonomy = taxonomy[i], schema = approach[i])
+      ))
+      Tax <- veg_obj$header[[t_syntax$header[i]]][
+        !is.na(veg_obj$header[[t_syntax$header[i]]])
+      ]
+      Query <- paste(
+        "select tax_id,taxon_usage_id",
+        paste0("from \"", t_syntax$approach[i], "\".names2concepts"),
+        paste0("where tax_id in (", paste0(Tax, collapse = ","), ")")
+      )
+      Tax <- dbGetQuery(conn, Query)
+      veg_obj$header[[t_syntax$header[i]]] <- Tax$taxon_usage_id[match(
+        veg_obj$header[[t_syntax$header[i]]], Tax$tax_id
+      )]
     }
   }
-  # replace names --------------------------------------------------------------
-  colnames(veg_obj$header) <- replace_x(colnames(veg_obj$header),
-    old = "releve_id", new = "ReleveID"
-  )
-  colnames(veg_obj$samples) <- replace_x(colnames(veg_obj$samples),
-    old = c("releve_id", "taxon_usage_id"),
-    new = c("ReleveID", "TaxonUsageID")
-  )
   # final output ---------------------------------------------------------------
   message("OK\nDONE!\n")
   if (as_list) {

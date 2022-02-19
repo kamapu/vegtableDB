@@ -4,6 +4,7 @@
 #' @importFrom taxlist accepted_name clean_strings merge_taxa
 #' @importFrom rpostgis pgInsert
 #' @importFrom sf st_read st_geometry<-
+#' @importFrom stringr str_split
 #' @importClassesFrom RPostgreSQL PostgreSQLConnection
 #' @importClassesFrom taxlist taxlist
 #' @importClassesFrom vegtable vegtable

@@ -3,20 +3,30 @@
 \name{db2taxlist}
 \alias{db2taxlist}
 \alias{db2taxlist.PostgreSQLConnection}
+\alias{db2taxlist,PostgreSQLConnection-method}
 \title{Import relational databases into taxlist objects}
 \usage{
 db2taxlist(conn, ...)
 
-\method{db2taxlist}{PostgreSQLConnection}(conn, taxonomy, subset_levels = TRUE, as_list = FALSE, ...)
+\method{db2taxlist}{PostgreSQLConnection}(
+  conn,
+  taxonomy,
+  schema = "plant_taxonomy",
+  subset_levels = TRUE,
+  as_list = FALSE,
+  ...
+)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
 
-\item{...}{Further arguments passed among methods. In the two wrappers the
-arguments are passed to \code{db2taxlist}.}
+\item{...}{Further arguments passed among methods (not used here).}
 
 \item{taxonomy}{Character value with the name of the taxonomy in the
 database.}
+
+\item{schema}{Character value indicating the name of the schema containing
+taxonomic information within the database.}
 
 \item{subset_levels}{Logical value indicating whether taxonomic ranks should
 be restricted to the used ones or all ranks available in the database.}

@@ -7,34 +7,18 @@
 \usage{
 db2vegtable(conn, ...)
 
-\method{db2vegtable}{PostgreSQLConnection}(
-  conn,
-  database,
-  description,
-  geometry = "plot_centroid",
-  header_cols,
-  simplify_header = TRUE,
-  as_list = FALSE,
-  ...
-)
+\method{db2vegtable}{PostgreSQLConnection}(conn, database, geometry = "plot_centroid", as_list = FALSE, ...)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
 
 \item{...}{Further arguments passed to \code{\link[=db2taxlist]{db2taxlist()}}.}
 
-\item{database}{A character value indicating the name of the database to be
+\item{database}{Character value indicating the name of the database to be
 imported.}
 
-\item{description}{Named vector with metadata.}
-
-\item{geometry}{Name of the variable in header containing the geometry of
-the plots.}
-
-\item{header_cols}{A character vector with the names of the columns required.}
-
-\item{simplify_header}{A logical value indicating whether empty columns
-should be deleted from slot header or not.}
+\item{geometry}{Character vectors indicating the name of the variables
+stored as geometries in PostGIS.}
 
 \item{as_list}{Logical value indicating whether a list or an object of class
 \linkS4class{vegtable} should be returned.}
