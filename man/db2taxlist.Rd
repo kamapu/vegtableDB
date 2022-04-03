@@ -11,6 +11,7 @@ db2taxlist(conn, ...)
 \method{db2taxlist}{PostgreSQLConnection}(
   conn,
   taxonomy,
+  concepts,
   schema = "plant_taxonomy",
   subset_levels = TRUE,
   as_list = FALSE,
@@ -24,6 +25,10 @@ db2taxlist(conn, ...)
 
 \item{taxonomy}{Character value with the name of the taxonomy in the
 database.}
+
+\item{concepts}{A vector with taxon concept IDs to be included in the output.
+If not provided the whole taxonomy will be imported. IDs belonging to a
+different taxonomy will cause an error message.}
 
 \item{schema}{Character value indicating the name of the schema containing
 taxonomic information within the database.}

@@ -11,6 +11,9 @@
 #' @param conn A database connection provided by [dbConnect()].
 #' @param taxonomy Character value with the name of the taxonomy in the
 #'     database.
+#' @param concepts A vector with taxon concept IDs to be included in the output.
+#'     If not provided the whole taxonomy will be imported. IDs belonging to a
+#'     different taxonomy will cause an error message.
 #' @param schema Character value indicating the name of the schema containing
 #'     taxonomic information within the database.
 #' @param subset_levels Logical value indicating whether taxonomic ranks should
@@ -31,6 +34,7 @@ db2taxlist <- function(conn, ...) {
 #' @export
 db2taxlist.PostgreSQLConnection <- function(conn,
                                             taxonomy,
+                                            concepts,
                                             schema = "plant_taxonomy",
                                             subset_levels = TRUE,
                                             as_list = FALSE, ...) {
@@ -49,16 +53,60 @@ db2taxlist.PostgreSQLConnection <- function(conn,
   }
   # Import taxon concepts
   message("OK\nImporting taxon concepts ... ", appendLF = FALSE)
-  Query <- paste(
-    "select",
-    "taxon_concept_id \"TaxonConceptID\",",
-    "parent_id \"Parent\",",
-    "rank \"Level\",",
-    "view_key",
-    paste0("from \"", schema, "\".taxon_concepts"),
-    paste0("where top_view = '", taxonomy, "'")
-  )
+  if (missing(concepts)) {
+    Query <- paste(
+      paste0(
+        "select ",
+        "taxon_concept_id \"TaxonConceptID\",",
+        "parent_id \"Parent\",",
+        "rank \"Level\",",
+        "view_key"
+      ),
+      paste0("from \"", schema, "\".taxon_concepts"),
+      paste0("where top_view = '", taxonomy, "'")
+    )
+  } else {
+    Query <- paste(
+      "select taxon_concept_id,top_view taxonomy",
+      paste0("from \"", schema, "\".taxon_concepts"),
+      paste0(
+        "where taxon_concept_id in (", paste0(concepts, collapse = ","),
+        ")"
+      )
+    )
+    check_concepts <- dbGetQuery(conn, Query)
+    check_concepts <- check_concepts[check_concepts$taxonomy != taxonomy, ]
+    if (nrow(check_concepts) > 0) {
+      stop(
+        paste0(
+          "Following queried concepts are in a different taxonomy ",
+          "as the requested one:\n"
+        ),
+        paste0(check_concepts$taxon_concept_id, collapse = ", ")
+      )
+    }
+    Query <- paste(
+      paste0(
+        "select ",
+        "taxon_concept_id \"TaxonConceptID\",",
+        "parent_id \"Parent\",",
+        "rank \"Level\",",
+        "view_key"
+      ),
+      paste0("from \"", schema, "\".taxon_concepts"),
+      paste0(
+        "where taxon_concept_id in (", paste0(concepts, collapse = ","),
+        ")"
+      )
+    )
+  }
   species_obj$taxonRelations <- dbGetQuery(conn, Query)
+  # delete missing parents
+  species_obj$taxonRelations$Parent <- with(species_obj$taxonRelations, {
+        Parent[!Parent %in% TaxonConceptID] <- NA
+        Parent
+      }
+  )
   # Link names and concepts
   Query <- paste(
     "select",
