@@ -40,18 +40,3 @@ head(Names)
 
 Names <- query_names(conn, "Cyperus el", concepts = TRUE, accepted = TRUE)
 head(Names)
-
-# Test option for queried concepts using db2taxlist
-
-taxonomy = "ea_splist"
-## concepts = c(198, 53772, 68232, 68250)
-concepts = c(198, 53772)
-schema = "plant_taxonomy"
-subset_levels = TRUE
-as_list = FALSE
-
-
-
-
-
-

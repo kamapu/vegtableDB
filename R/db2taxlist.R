@@ -49,6 +49,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
     )
   )))
   if (!taxonomy %in% db_names) {
+    message("\n\n")
     stop("The requested taxonomic list is not in the connected database.")
   }
   # Import taxon concepts
@@ -77,6 +78,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
     check_concepts <- dbGetQuery(conn, Query)
     check_concepts <- check_concepts[check_concepts$taxonomy != taxonomy, ]
     if (nrow(check_concepts) > 0) {
+      message("\n\n")
       stop(
         paste0(
           "Following queried concepts are in a different taxonomy ",
