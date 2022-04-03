@@ -14,14 +14,43 @@ library(vegtableDB)
 # Restore database
 DB <- "vegetation_v3"
 
-do_restore(dbname = DB,
+do_restore(
+    dbname = DB,
     user = "miguel",
-    filepath = file.path("../../db-dumps/00_dumps", DB),
-    path_psql = "/usr/bin")
+    filepath = file.path("../../db-dumps/00_dumps", DB)
+)
 
 # Connect database
 conn <- connect_db(DB, user = "miguel")
 
+# Only names case-insensitve
+Names <- query_name(conn, "cyper")
+head(Names)
+
+# Only names case-sensitive
+Names <- query_name(conn, "cyper", case = TRUE)
+head(Names)
+
+Names <- query_name(conn, "Cyper", case = TRUE)
+head(Names)
+
+# Names and concepts
+Names <- query_name(conn, "Cyperus el", concepts = TRUE)
+head(Names)
+
+Names <- query_name(conn, "Cyperus el", concepts = TRUE, accepted = TRUE)
+head(Names)
+
+# Test option for queried concepts using db2taxlist
+
+
+new_id <- Names$taxon_usage_id
+
+new_id <- c(new_id, 2000000)
+
+
+old_id <- Names$taxon_usage_id
+schema = "plant_taxonomy"
 
 query <- "Cyperus el"
 case = FALSE

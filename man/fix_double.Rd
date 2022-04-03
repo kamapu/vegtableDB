@@ -8,7 +8,7 @@
 \usage{
 fix_double(conn, ...)
 
-\method{fix_double}{PostgreSQLConnection}(conn, new_id, old_id, ...)
+\method{fix_double}{PostgreSQLConnection}(conn, new_id, old_id, schema = "plant_taxonomy", ...)
 }
 \arguments{
 \item{conn}{Connection to the database as \linkS4class{PostgreSQLConnection}.}
@@ -19,6 +19,9 @@ fix_double(conn, ...)
 
 \item{old_id}{Vector with IDs of the names that have to be replaced and
 deleted.}
+
+\item{schema}{Character value indicating the name of the schema containing
+taxonomic information within the database.}
 }
 \description{
 When names inserted with no authors or with misspelled authors, duplicated

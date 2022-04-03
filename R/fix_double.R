@@ -19,6 +19,8 @@
 #' @param new_id Vector with IDs of the correct name.
 #' @param old_id Vector with IDs of the names that have to be replaced and
 #'     deleted.
+#' @param schema Character value indicating the name of the schema containing
+#'     taxonomic information within the database.
 #' @param ... Further arguments passed among methods.
 #'
 #' @rdname fix_double
@@ -32,13 +34,38 @@ fix_double <- function(conn, ...) {
 #' @aliases fix_double,PostgreSQLConnection-method
 #' @method fix_double PostgreSQLConnection
 #' @export
-fix_double.PostgreSQLConnection <- function(conn, new_id, old_id, ...) {
+fix_double.PostgreSQLConnection <- function(conn, new_id, old_id,
+                                            schema = "plant_taxonomy", ...) {
+  # Both vectors of the same length
   if (length(new_id) != length(old_id)) {
     stop("Arguments for 'new_id' and 'old_id' have to be of the same length.")
   }
+  # All new_id in database
+  query <- paste(
+    "select taxon_usage_id",
+    paste0("from ", schema, ".taxon_names")
+  )
+  all_ids <- unlist(dbGetQuery(conn, query))
+  check_ids <- new_id[!new_id %in% all_ids]
+  if (length(check_ids) > 0) {
+    stop(paste0(
+      "Follosing IDs in 'new_id' are not occurring ",
+      "in the database:\n",
+      paste0(check_ids, collapse = ",")
+    ))
+  }
+  # All old_id in database
+  check_ids <- old_id[!old_id %in% all_ids]
+  if (length(check_ids) > 0) {
+    stop(paste0(
+      "Follosing IDs in 'old_id' are not occurring ",
+      "in the database:\n",
+      paste0(check_ids, collapse = ",")
+    ))
+  }
   TAX <- dbGetQuery(conn, paste(
     "select *",
-    "from plant_taxonomy.names2concepts",
+    paste0("from ", schema, ".names2concepts"),
     paste0("where taxon_usage_id in (", paste0(c(new_id, old_id),
       collapse = ","
     ), ")")
@@ -55,13 +82,13 @@ fix_double.PostgreSQLConnection <- function(conn, new_id, old_id, ...) {
   }
   for (i in 1:length(new_id)) {
     query <- paste(
-      "update plant_taxonomy.names2concepts",
+      paste0("update ", schema, ".names2concepts"),
       "set taxon_usage_id =", new_id[i],
       "where taxon_usage_id =", old_id[i]
     )
     dbSendQuery(conn, query)
     query <- paste(
-      "delete from plant_taxonomy.taxon_names",
+      paste0("delete from ", schema, ".taxon_names"),
       "where taxon_usage_id =", old_id[i]
     )
     dbSendQuery(conn, query)
