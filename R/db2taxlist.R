@@ -130,7 +130,8 @@ db2taxlist.PostgreSQLConnection <- function(conn,
   species_obj$taxonRelations <- dbGetQuery(conn, Query)
   if (!missing(concepts) & keep_parents) {
     repeat {
-      if (with(species_obj$taxonRelations, all(Parent %in% TaxonConceptID))) {
+      if (with(species_obj$taxonRelations, all(Parent[!is.na(Parent)] %in%
+                  TaxonConceptID))) {
         break
       }
       add_concepts <- with(
