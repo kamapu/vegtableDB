@@ -14,6 +14,8 @@ db2taxlist(conn, ...)
   concepts,
   schema = "plant_taxonomy",
   subset_levels = TRUE,
+  keep_parents = FALSE,
+  keep_children = FALSE,
   as_list = FALSE,
   ...
 )
@@ -35,6 +37,14 @@ taxonomic information within the database.}
 
 \item{subset_levels}{Logical value indicating whether taxonomic ranks should
 be restricted to the used ones or all ranks available in the database.}
+
+\item{keep_parents}{A logical value indicating whether parents of queried
+concepts should be included in the output or not. It works only if an
+argument is provided for the parameter \code{'concepts'}.}
+
+\item{keep_children}{A logical value indicating whether children of queried
+concepts should be included in the output or not. It works only if an
+argument is provided for the parameter \code{'concepts'}.}
 
 \item{as_list}{Logical value indicating whether the output should be a list
 or a \linkS4class{taxlist} object.}

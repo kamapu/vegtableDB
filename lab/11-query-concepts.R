@@ -40,14 +40,3 @@ TAX
 # Both concepts
 TAX <- db2taxlist(conn, taxonomy = "ea_splist", concepts = Concepts)
 TAX
-
-# Including parents and children
-species_obj <- list()
-taxonomy = "ea_splist"
-concepts = Concepts
-
-
-
-
-
-
