@@ -14,13 +14,14 @@ rm(list = ls())
 unlink(file.path("build-pkg", list.files("build-pkg", ".tar.gz")))
 unlink(file.path("build-pkg", list.files("build-pkg", ".pdf")))
 
-# Apply style to scripts
+# Apply style and document
 style_pkg()
-
-# Document and build
 document()
-pkg_loc <- build(path = "build-pkg")
-build_manual(path = "build-pkg")
 
-# Check package
+# Build and check
+pkg_loc <- build(path = "build-pkg")
 check_built(path = pkg_loc)
+
+# Build manual and install
+build_manual(path = "build-pkg")
+install()

@@ -17,7 +17,8 @@ Imports:
 	RPostgreSQL,
 	rpostgis,
 	sf,
-	stringr
+	stringr,
+	tcltk
 Suggests:
 	devtools,
 	roxygen2
