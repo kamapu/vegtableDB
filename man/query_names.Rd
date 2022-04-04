@@ -13,6 +13,7 @@ query_names(conn, ...)
   query,
   schema = "plant_taxonomy",
   case = FALSE,
+  exact = FALSE,
   concepts = FALSE,
   accepted = FALSE,
   ...
@@ -30,7 +31,10 @@ the database.}
 taxonomic information within the database.}
 
 \item{case}{A logical value indicating whether the match should be case
-sensitive (\code{TRUE}) or not (\code{FALSE}, the default).}
+sensitive (\code{TRUE}) or not (\code{FALSE}, the default). I does not apply if
+\code{'exact = TRUE'}.}
+
+\item{exact}{A logical value indicating whether the exact string is queried.}
 
 \item{concepts}{A logical value indicating whether taxon concepts should be
 displayed (\code{TRUE}) or just the names (\code{FALSE}, the default).}

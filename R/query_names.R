@@ -15,7 +15,9 @@
 #' @param schema Character value indicating the name of the schema containing
 #'     taxonomic information within the database.
 #' @param case A logical value indicating whether the match should be case
-#'     sensitive (`TRUE`) or not (`FALSE`, the default).
+#'     sensitive (`TRUE`) or not (`FALSE`, the default). I does not apply if
+#'     `'exact = TRUE'`.
+#' @param exact A logical value indicating whether the exact string is queried.
 #' @param concepts A logical value indicating whether taxon concepts should be
 #'     displayed (`TRUE`) or just the names (`FALSE`, the default).
 #' @param accepted A logical value indicating whether the respective accepted
@@ -36,26 +38,35 @@ query_names <- function(conn, ...) {
 #' @export
 query_names.PostgreSQLConnection <- function(conn, query,
                                              schema = "plant_taxonomy",
-                                             case = FALSE, concepts = FALSE,
-                                             accepted = FALSE, ...) {
+                                             case = FALSE, exact = FALSE,
+                                             concepts = FALSE, accepted = FALSE,
+                                             ...) {
   if (length(query) > 1) {
     warning(paste(
       "Only the first element of 'query' will be matched",
       "with the database"
     ))
   }
-  if (case) {
+  if (exact) {
     query <- paste(
       "select *",
       paste0("from ", schema, ".taxon_names"),
-      paste0("where usage_name ~ '", query[1], "'")
+      paste0("where usage_name = '", query[1], "'")
     )
   } else {
-    query <- paste(
-      "select *",
-      paste0("from ", schema, ".taxon_names"),
-      paste0("where usage_name ~* '", query[1], "'")
-    )
+    if (case) {
+      query <- paste(
+        "select *",
+        paste0("from ", schema, ".taxon_names"),
+        paste0("where usage_name ~ '", query[1], "'")
+      )
+    } else {
+      query <- paste(
+        "select *",
+        paste0("from ", schema, ".taxon_names"),
+        paste0("where usage_name ~* '", query[1], "'")
+      )
+    }
   }
   Names <- dbGetQuery(conn, query)
   if (concepts) {

@@ -41,13 +41,38 @@ TAX
 TAX <- db2taxlist(conn, taxonomy = "ea_splist", concepts = Concepts)
 TAX
 
+# incluging parents
+TAX <- db2taxlist(conn, taxonomy = "ea_splist", concepts = Concepts,
+    keep_parents = TRUE)
+TAX
+indented_list(TAX, synonyms = TRUE)
+
+# The opposite direction
+(Names <- query_names(conn, "Bidens", concepts = TRUE, accepted = TRUE))
+
+TAX <- db2taxlist(conn, taxonomy = "ea_splist", concepts = 54793,
+    keep_children = TRUE, keep_parents = TRUE)
+TAX
+indented_list(TAX)
+
+
+
+
+
 # Including parents and children
 species_obj <- list()
 taxonomy = "ea_splist"
+schema = "plant_taxonomy"
 concepts = Concepts
+subset_levels = TRUE
+keep_parents = FALSE
+keep_children = FALSE
+as_list = FALSE
 
 
+concepts = 54793
 
 
-
+(Names <- query_names(conn, "Bidens", concepts = TRUE, accepted = TRUE))
+subset(Names, usage_name == "Bidens")
 
