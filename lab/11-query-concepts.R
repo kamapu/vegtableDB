@@ -8,7 +8,7 @@ install_github("kamapu/vegtableDB", "devel")
 
 # Load libraries
 ## library(dbaccess)
-library(RPostgreSQL)
+## library(RPostgreSQL)
 library(vegtableDB)
 
 # Restore database
@@ -27,36 +27,16 @@ conn <- connect_db(DB, user = "miguel")
 (Names <- query_names(conn, "Cyperus el", concepts = TRUE, accepted = TRUE))
 (Names <- query_names(conn, "Cyperus", concepts = TRUE, exact = TRUE))
 
-
-library(RPostgreSQL)
-
-query = "Cyperus el"
-taxonomy = "ea_splist"
-schema = "plant_taxonomy"
-case = FALSE
-exact = FALSE
-
-query = "Cyperus"
-exact = TRUE
-
-
-
-
-
-
-
-
-# Use Query in db2taxlist (multiple taxonomies => error)
-TAX <- db2taxlist(conn, taxonomy = "ea_splist",
-    concepts = Names$taxon_concept_id)
-
-# Filter concepts
-Concepts <- with(Names, taxon_concept_id[taxonomy == "ea_splist"])
-
-# Only one concept
-TAX <- db2taxlist(conn, taxonomy = "ea_splist", concepts = Concepts[1])
+# Query concepts
+TAX <- query_concepts(conn, "Cyperus el", taxonomy = "ea_splist")
 TAX
 
-# Both concepts
-TAX <- db2taxlist(conn, taxonomy = "ea_splist", concepts = Concepts)
+TAX <- query_concepts(conn, "Cyperus el", taxonomy = "ea_splist",
+    keep_parents = TRUE)
 TAX
+indented_list(TAX)
+
+TAX <- query_concepts(conn, "Bidens", taxonomy = "ea_splist", exact = TRUE,
+    keep_parents = TRUE, keep_children = TRUE)
+TAX
+indented_list(TAX)
