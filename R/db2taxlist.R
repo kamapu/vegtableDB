@@ -103,7 +103,10 @@ db2taxlist.PostgreSQLConnection <- function(conn,
           paste0(
             "where parent_id in (", paste0(concepts, collapse = ","),
             ")"
-          )
+          ),
+          paste0("and taxon_concept_id not in (", paste0(concepts,
+            collapse = ","
+          ), ")")
         )
         add_concepts <- unlist(dbGetQuery(conn, Query))
         if (length(add_concepts) == 0) {
@@ -131,7 +134,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
   if (!missing(concepts) & keep_parents) {
     repeat {
       if (with(species_obj$taxonRelations, all(Parent[!is.na(Parent)] %in%
-                  TaxonConceptID))) {
+        TaxonConceptID))) {
         break
       }
       add_concepts <- with(
