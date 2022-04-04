@@ -8,7 +8,7 @@ install_github("kamapu/vegtableDB", "devel")
 
 # Load libraries
 ## library(dbaccess)
-library(RPostgreSQL)
+## library(RPostgreSQL)
 library(vegtableDB)
 
 # Restore database
@@ -40,3 +40,6 @@ head(Names)
 
 Names <- query_names(conn, "Cyperus el", concepts = TRUE, accepted = TRUE)
 head(Names)
+
+# Exact name
+(Names <- query_names(conn, "Cyperus", exact = TRUE, concepts = TRUE))

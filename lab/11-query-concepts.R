@@ -25,6 +25,26 @@ conn <- connect_db(DB, user = "miguel")
 
 # Query a name
 (Names <- query_names(conn, "Cyperus el", concepts = TRUE, accepted = TRUE))
+(Names <- query_names(conn, "Cyperus", concepts = TRUE, exact = TRUE))
+
+
+library(RPostgreSQL)
+
+query = "Cyperus el"
+taxonomy = "ea_splist"
+schema = "plant_taxonomy"
+case = FALSE
+exact = FALSE
+
+query = "Cyperus"
+exact = TRUE
+
+
+
+
+
+
+
 
 # Use Query in db2taxlist (multiple taxonomies => error)
 TAX <- db2taxlist(conn, taxonomy = "ea_splist",
