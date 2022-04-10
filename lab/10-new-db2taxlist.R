@@ -56,14 +56,14 @@ TAX
 indented_list(TAX)
 
 
-
-
+TAX <- db2taxlist(conn, taxonomy = "ea_splist")
+TAX <- db2taxlist(conn, taxonomy = "sam_splist")
 
 # Including parents and children
 species_obj <- list()
 taxonomy = "ea_splist"
 schema = "plant_taxonomy"
-concepts = Concepts
+## concepts = Concepts
 subset_levels = TRUE
 keep_parents = FALSE
 keep_children = FALSE

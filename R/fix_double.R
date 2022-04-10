@@ -49,7 +49,7 @@ fix_double.PostgreSQLConnection <- function(conn, new_id, old_id,
   check_ids <- new_id[!new_id %in% all_ids]
   if (length(check_ids) > 0) {
     stop(paste0(
-      "Follosing IDs in 'new_id' are not occurring ",
+      "Following IDs in 'new_id' are not occurring ",
       "in the database:\n",
       paste0(check_ids, collapse = ",")
     ))
@@ -58,7 +58,7 @@ fix_double.PostgreSQLConnection <- function(conn, new_id, old_id,
   check_ids <- old_id[!old_id %in% all_ids]
   if (length(check_ids) > 0) {
     stop(paste0(
-      "Follosing IDs in 'old_id' are not occurring ",
+      "Following IDs in 'old_id' are not occurring ",
       "in the database:\n",
       paste0(check_ids, collapse = ",")
     ))
@@ -70,6 +70,13 @@ fix_double.PostgreSQLConnection <- function(conn, new_id, old_id,
       collapse = ","
     ), ")")
   ))
+  TAX <- merge(TAX, dbGetQuery(conn, paste(
+    "select taxon_concept_id,top_view",
+    paste0("from ", schema, ".taxon_concepts"),
+    paste0("where taxon_concept_id in (", paste0(TAX$taxon_concept_id,
+      collapse = ","
+    ), ")")
+  )))
   # Test for generated duplicates
   TAX$new_usage <- replace_x(TAX$taxon_usage_id, old = old_id, new = new_id)
   Err <- TAX[duplicated(TAX[, c("new_usage", "taxon_concept_id")]), ]
@@ -80,13 +87,24 @@ fix_double.PostgreSQLConnection <- function(conn, new_id, old_id,
       paste0(TAX$taxon_usage_id, collapse = ","), "."
     ))
   }
+  # Same name cannot be used more than once per taxonomy
+  Err <- TAX[duplicated(TAX[, c("new_usage", "top_view")]), ]
+  if (nrow(Err) > 0) {
+    stop(paste0(
+      "Replacing following usage ID's will cause multiple use of ",
+      "names within the same taxonomy:\n",
+      paste0(TAX$taxon_usage_id, collapse = ","), "."
+    ))
+  }
   for (i in 1:length(new_id)) {
+    # Set old usage to new
     query <- paste(
       paste0("update ", schema, ".names2concepts"),
       "set taxon_usage_id =", new_id[i],
       "where taxon_usage_id =", old_id[i]
     )
     dbSendQuery(conn, query)
+    # Delete old usage
     query <- paste(
       paste0("delete from ", schema, ".taxon_names"),
       "where taxon_usage_id =", old_id[i]
