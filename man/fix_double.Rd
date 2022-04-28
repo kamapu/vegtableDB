@@ -9,6 +9,10 @@
 fix_double(conn, ...)
 
 \method{fix_double}{PostgreSQLConnection}(conn, new_id, old_id, schema = "plant_taxonomy", ...)
+
+fix_double(conn, ...)
+
+\method{fix_double}{PostgreSQLConnection}(conn, new_id, old_id, schema = "plant_taxonomy", ...)
 }
 \arguments{
 \item{conn}{Connection to the database as \linkS4class{PostgreSQLConnection}.}
@@ -24,6 +28,18 @@ deleted.}
 taxonomic information within the database.}
 }
 \description{
+When names inserted with no authors or with misspelled authors, duplicated
+entries will be created, which may cause conflicts if one name is corrected
+since the database does not allow duplicated combinations of names and
+authors.
+
+In this routines one name (parameter \code{'old_id'}) will be replaced by another
+alternative name (parameter \code{'new_id'}) in all usages and the first will be
+finally deleted from the database.
+
+If the two alternatives are already used within the same taxonomy (another
+constraint of the database), this function retrieves an error message.
+
 When names inserted with no authors or with misspelled authors, duplicated
 entries will be created, which may cause conflicts if one name is corrected
 since the database does not allow duplicated combinations of names and
