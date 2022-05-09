@@ -35,7 +35,7 @@ insert_synonym.PostgreSQLConnection <- function(conn,
                                                 clean = TRUE,
                                                 ...) {
   if (any(!c("taxon_concept_id", "usage_name", "author_name") %in%
-          colnames(df))) {
+    colnames(df))) {
     stop(paste(
       "Columns 'taxon_concept_id', 'usage_name' and 'author_name'",
       "are mandatory in argument 'df'."
