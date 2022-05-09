@@ -1,12 +1,9 @@
-#' @name insert_concept
+#' @name insert_synonym
 #'
-#' @title Insert taxonomic concepts in database
+#' @title Insert synonym to existing taxon concepts in database
 #'
 #' @description
-#' Insert new taxonomic concepts by using accepted names.
-#' A previous use of the name in the taxonomy will retrieve an error message.
-#' Names that are new for the database will be inserted in the main list of
-#' names.
+#' Adding synonyms to existing concepts in database.
 #'
 #' @param conn A database connection provided by [dbConnect()].
 #' @param taxonomy Character value with the name of the taxonomy in the
@@ -14,34 +11,38 @@
 #' @param schema Character value indicating the name of the schema containing
 #'     all taxonomic tables in the database.
 #' @param df A data frame with new names and related information. Two columns
-#'     are mandatory, namely **usage_name** and **author_name**, both as
-#'     character vectors.
+#'     are mandatory, namely **taxon_concept_id**, **usage_name** and
+#'     **author_name**, both as character vectors.
 #' @param clean A logical value indicating cleaning of characters.
 #' @param ... Further arguments passed among methods.
 #'
-#' @rdname insert_concept
+#' @rdname insert_synonym
 #'
 #' @export
-insert_concept <- function(conn, ...) {
-  UseMethod("insert_concept", conn)
+insert_synonym <- function(conn, ...) {
+  UseMethod("insert_synonym", conn)
 }
 
-#' @rdname insert_concept
+#' @rdname insert_synonym
 #'
-#' @aliases insert_concept,PostgreSQLConnection-method
+#' @aliases insert_synonym,PostgreSQLConnection-method
 #'
 #' @export
-insert_concept.PostgreSQLConnection <- function(conn,
+insert_synonym.PostgreSQLConnection <- function(conn,
                                                 taxonomy,
                                                 schema = "plant_taxonomy",
                                                 df,
                                                 clean = TRUE,
                                                 ...) {
-  if (any(!c("usage_name", "author_name") %in% colnames(df))) {
+  if (any(!c("taxon_concept_id", "usage_name", "author_name") %in%
+          colnames(df))) {
     stop(paste(
-      "Columns 'usage_name' and 'author_name'",
+      "Columns 'taxon_concept_id', 'usage_name' and 'author_name'",
       "are mandatory in argument 'df'."
     ))
+  }
+  if (any(is.na(df$taxon_concept_id))) {
+    stop("NA values are not allowed in column 'taxon_concept_id' in 'df'")
   }
   if (any(is.na(df$usage_name))) {
     stop("NA values are not allowed in column 'usage_name' in 'df'")
@@ -51,12 +52,6 @@ insert_concept.PostgreSQLConnection <- function(conn,
   }
   if (any(duplicated(df[, c("usage_name", "author_name")]))) {
     stop("Duplicated combinations detected in 'df'.")
-  }
-  if ("taxon_concept_id" %in% colnames(df)) {
-    stop(paste(
-      "Column 'taxon_concept_id' detected in 'df'.",
-      "Use 'insert_synonym()' instead"
-    ))
   }
   if (clean) {
     df <- clean_strings(df)
@@ -115,58 +110,13 @@ insert_concept.PostgreSQLConnection <- function(conn,
       paste0(n2c$taxon_concept_id, collapse = ", ")
     ))
   }
-  # Cross-check parents
-  if ("parent_id" %in% names(df)) {
-    p1 <- unique(df$parent_id[!is.na(df$parent_id)])
-    p2 <- unlist(dbGetQuery(conn, paste(
-      "select taxon_concept_id",
-      paste0("from ", schema, ".taxon_concepts"),
-      paste0("where taxon_concept_id in (", paste0(p1, collapse = ","), ")")
-    )))
-    p1 <- p1[!p1 %in% p2]
-    if (length(p1) > 0) {
-      stop(paste0(
-        "Following 'parent_id' in 'df' are notincluded as concepts ",
-        "in the database:\n", paste0(p1, collapse = ", ")
-      ))
-    }
-  }
-  # Cross-check taxonomic ranks
-  if ("rank" %in% names(df)) {
-    r1 <- unique(paste(df$rank[!is.na(df$rank)]))
-    r2 <- unlist(dbGetQuery(conn, paste(
-      "select \"rank\"",
-      paste0("from \"", schema, "\".taxon_levels"),
-      paste0(
-        "where \"rank\" in ('", paste0(r1, collapse = "','"),
-        "')"
-      )
-    )))
-    r1 <- r1[!r1 %in% r2]
-    if (length(r1) > 0) {
-      stop(paste0(
-        "Following values for 'rank' are not included",
-        "in the database:\n",
-        paste0(r2, collapse = ", ")
-      ))
-    }
-  }
-  # Import concept
-  old_concepts <- unlist(dbGetQuery(conn, paste(
-    "select taxon_concept_id",
-    paste0("from \"", schema, "\".taxon_concepts")
-  )))
-  df$taxon_concept_id <- max(old_concepts) + 1:nrow(df)
-  df$top_view <- taxonomy
-  df$name_status <- "accepted"
-  df$taxon_usage_id <- with(Names, taxon_usage_id[match(
-    paste(df$usage_name, df$author_name), paste(
-      usage_name,
-      author_name
-    )
-  )])
+  # Insert concept
+  df$taxon_usage_id <- with(Names, taxon_usage_id[match(paste(
+    df$usage_name,
+    df$author_name
+  ), paste(usage_name, author_name))])
+  df$name_status <- "synonym"
   # Insert concepts
-  pgInsert(conn, c(schema, "taxon_concepts"), df, partial.match = TRUE)
   pgInsert(conn, c(schema, "names2concepts"), df, partial.match = TRUE)
   message("DONE!")
 }
