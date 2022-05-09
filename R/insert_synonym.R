@@ -95,14 +95,15 @@ insert_synonym.PostgreSQLConnection <- function(conn,
     ), ")")
   ))
   if (nrow(n2c) > 0) {
-    n2c <- unlist(dbGetQuery(conn, paste(
-      "select taxon_concept_id",
-      paste0("from \"", schema, "\".taxon_concepts"),
-      paste0("where taxon_concept_id in (", paste0(n2c$taxon_concept_id,
-        collapse = ","
-      ), ")"),
-      paste0("and top_view = '", taxonomy, "'")
-    )))
+    conc_id <- unlist(dbGetQuery(conn, paste(
+              "select taxon_concept_id",
+              paste0("from \"", schema, "\".taxon_concepts"),
+              paste0("where taxon_concept_id in (", paste0(n2c$taxon_concept_id,
+                      collapse = ","
+                  ), ")"),
+              paste0("and top_view = '", taxonomy, "'")
+          )))
+  n2c <- n2c[n2c$taxon_concept_id %in% conc_id, ]
   }
   if (nrow(n2c) > 0) {
     stop(paste0(
