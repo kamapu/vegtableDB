@@ -34,7 +34,7 @@ db2vegtable <- function(conn, ...) {
 #' @export
 db2vegtable.PostgreSQLConnection <- function(conn,
                                              database,
-											 header_cols,
+											                       header_cols,
                                              geometry = "plot_centroid",
                                              as_list = FALSE,
                                              ...) {
@@ -94,9 +94,6 @@ db2vegtable.PostgreSQLConnection <- function(conn,
 				  "from environment.\"header\"",
 				  paste0("where db_name ='", database, "'")
 		  ))
-  
-  
-  
   veg_obj$header <- veg_obj$header[, apply(
     veg_obj$header, 2,
     function(x) !all(is.na(x))
