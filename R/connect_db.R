@@ -10,6 +10,9 @@
 #' @param user,password Character values. They are also passed to
 #'     [DBI::dbConnect()] but can be alternatively inserted or modified in the
 #'     prompt.
+#' @param pkg A character value indicating the alternative package used to
+#'     establish the connection. At the moment only `RpostgreSQL` and
+#'     `RPostgres` are suitable.
 #' @param ... Further arguments passed to [DBI::dbConnect()].
 #'
 #' @return
@@ -26,7 +29,7 @@
 #'
 #' @export
 connect_db <- function(dbname = "", host = "localhost", port = "5432",
-                       user = "", password = "", ...) {
+                       user = "", password = "", pkg = "RPostgreSQL", ...) {
   # Top level
   tt <- tktoplevel()
   tkwm.title(tt, "Connect Database")
@@ -38,7 +41,10 @@ connect_db <- function(dbname = "", host = "localhost", port = "5432",
   label_Password <- tklabel(tt, text = "Password:")
   # Boxes
   entry_User <- tkentry(tt, width = "20", textvariable = User)
-  entry_Password <- tkentry(tt, width = "20", show = "*", textvariable = Password)
+  entry_Password <- tkentry(tt,
+    width = "20", show = "*",
+    textvariable = Password
+  )
   # The grid
   # tkgrid(tklabel(tt, text="Enter your login details"))
   tkgrid(label_User, entry_User)
@@ -56,12 +62,27 @@ connect_db <- function(dbname = "", host = "localhost", port = "5432",
   tkfocus(tt)
   tkwait.window(tt)
   # Connection
-  RPostgreSQL::dbConnect("PostgreSQL",
-    dbname = dbname,
-    host = host,
-    port = port,
-    user = tclvalue(User),
-    password = tclvalue(Password),
-    ...
-  )
+  pkg_opts <- c("RPostgreSQL", "RPostgres")
+  pkg <- pmatch(pkg, pkg_opts)
+  if (is.na(pkg)) {
+    stop(paste0(
+      "Wrong argument in parameter 'pkg'. ",
+      "Try one of these alternatives:\n  '",
+      paste0(pkg_opts, collapse = "', '"), "'"
+    ))
+  }
+  if (pkg == 1) {
+    return(dbConnect(
+      drv = "PostgreSQL", dbname = dbname, host = host,
+      port = port, user = tclvalue(User), password = tclvalue(Password),
+      ...
+    ))
+  }
+  if (pkg == 2) {
+    return(dbConnect(
+      drv = Postgres(), dbname = dbname, host = host,
+      port = port, password = tclvalue(Password), user = tclvalue(User),
+      ...
+    ))
+  }
 }

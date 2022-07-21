@@ -34,7 +34,7 @@ db2vegtable <- function(conn, ...) {
 #' @export
 db2vegtable.PostgreSQLConnection <- function(conn,
                                              database,
-											                       header_cols,
+                                             header_cols,
                                              geometry = "plot_centroid",
                                              as_list = FALSE,
                                              ...) {
@@ -42,20 +42,23 @@ db2vegtable.PostgreSQLConnection <- function(conn,
   # get tables and schemas
   message("Importing metadata ... ", appendLF = FALSE)
   db_tables <- dbGetQuery(conn, paste(
-				  "select table_schema schema,table_name table",
-				  "from information_schema.tables",
-				  "where is_insertable_into = 'YES'"))
+    "select table_schema schema,table_name table",
+    "from information_schema.tables",
+    "where is_insertable_into = 'YES'"
+  ))
   # description ----------------------------------------------------------------
   db_names <- unlist(dbGetQuery(conn, paste(
-						  "select db_name",
-						  "from environment.databases")))
-  if (!database %in% db_names)
-	  stop(paste0("Data set '", database, "' is not stored in the database."))
+    "select db_name",
+    "from environment.databases"
+  )))
+  if (!database %in% db_names) {
+    stop(paste0("Data set '", database, "' is not stored in the database."))
+  }
   veg_obj$description <- unlist(dbGetQuery(conn, paste(
-						  "select *",
-						  "from environment.databases",
-						  paste0("where db_name = '", database, "'")
-				  )))
+    "select *",
+    "from environment.databases",
+    paste0("where db_name = '", database, "'")
+  )))
   # species --------------------------------------------------------------------
   message("OK\nImporting taxonomic list ... ", appendLF = FALSE)
   suppressMessages(veg_obj$species <- db2taxlist(conn,
@@ -63,24 +66,24 @@ db2vegtable.PostgreSQLConnection <- function(conn,
   ))
   # header ---------------------------------------------------------------------
   message("OK\nImporting header table and relations ... ", appendLF = FALSE)
-  if(!missing(header_cols)) {
-	  header_cols <- unique(c("releve_id", header_cols, geometry))
-	  header_cols <- header_cols[
-			  header_cols %in%
-					  unlist(dbGetQuery(conn, paste(
-											  "select column_name",
-											  "from information_schema.columns",
-											  "where table_schema = 'environment'",
-											  "and table_name = 'header'"
-									  )))
-	  ]
+  if (!missing(header_cols)) {
+    header_cols <- unique(c("releve_id", header_cols, geometry))
+    header_cols <- header_cols[
+      header_cols %in%
+        unlist(dbGetQuery(conn, paste(
+          "select column_name",
+          "from information_schema.columns",
+          "where table_schema = 'environment'",
+          "and table_name = 'header'"
+        )))
+    ]
   } else {
-	  header_cols <- unlist(dbGetQuery(conn, paste(
-							  "select column_name",
-							  "from information_schema.columns",
-							  "where table_schema = 'environment'",
-							  "and table_name = 'header'"
-					  )))
+    header_cols <- unlist(dbGetQuery(conn, paste(
+      "select column_name",
+      "from information_schema.columns",
+      "where table_schema = 'environment'",
+      "and table_name = 'header'"
+    )))
   }
   if (!geometry %in% header_cols) {
     stop(paste0(
@@ -90,10 +93,10 @@ db2vegtable.PostgreSQLConnection <- function(conn,
   }
   header_cols <- header_cols[header_cols != geometry]
   veg_obj$header <- dbGetQuery(conn, paste(
-				  "select", paste0(header_cols, collapse = ","),
-				  "from environment.\"header\"",
-				  paste0("where db_name ='", database, "'")
-		  ))
+    "select", paste0(header_cols, collapse = ","),
+    "from environment.\"header\"",
+    paste0("where db_name ='", database, "'")
+  ))
   veg_obj$header <- veg_obj$header[, apply(
     veg_obj$header, 2,
     function(x) !all(is.na(x))

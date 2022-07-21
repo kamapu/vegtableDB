@@ -10,6 +10,7 @@ connect_db(
   port = "5432",
   user = "",
   password = "",
+  pkg = "RPostgreSQL",
   ...
 )
 }
@@ -19,6 +20,10 @@ connect_db(
 \item{user, password}{Character values. They are also passed to
 \code{\link[DBI:dbConnect]{DBI::dbConnect()}} but can be alternatively inserted or modified in the
 prompt.}
+
+\item{pkg}{A character value indicating the alternative package used to
+establish the connection. At the moment only \code{RpostgreSQL} and
+\code{RPostgres} are suitable.}
 
 \item{...}{Further arguments passed to \code{\link[DBI:dbConnect]{DBI::dbConnect()}}.}
 }
