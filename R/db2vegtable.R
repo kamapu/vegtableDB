@@ -14,6 +14,9 @@
 #' @param conn A database connection provided by [dbConnect()].
 #' @param database Character value indicating the name of the database to be
 #'     imported.
+#' @param header_cols A character vector including the names of columns from the
+#'     table header to be included in the output data set. If not indicated, all
+#'     columns will be imported.
 #' @param geometry Character vectors indicating the name of the variables
 #'     stored as geometries in PostGIS.
 #' @param as_list Logical value indicating whether a list or an object of class
@@ -31,23 +34,31 @@ db2vegtable <- function(conn, ...) {
 #' @export
 db2vegtable.PostgreSQLConnection <- function(conn,
                                              database,
+                                             header_cols,
                                              geometry = "plot_centroid",
                                              as_list = FALSE,
                                              ...) {
   veg_obj <- list()
   # get tables and schemas
   message("Importing metadata ... ", appendLF = FALSE)
-  Query <- paste(
+  db_tables <- dbGetQuery(conn, paste(
     "select table_schema schema,table_name table",
-    "from information_schema.tables", "where is_insertable_into = 'YES'"
-  )
-  db_tables <- dbGetQuery(conn, Query)
+    "from information_schema.tables",
+    "where is_insertable_into = 'YES'"
+  ))
   # description ----------------------------------------------------------------
-  Query <- paste(
-    "select *", "from environment.databases",
+  db_names <- unlist(dbGetQuery(conn, paste(
+    "select db_name",
+    "from environment.databases"
+  )))
+  if (!database %in% db_names) {
+    stop(paste0("Data set '", database, "' is not stored in the database."))
+  }
+  veg_obj$description <- unlist(dbGetQuery(conn, paste(
+    "select *",
+    "from environment.databases",
     paste0("where db_name = '", database, "'")
-  )
-  veg_obj$description <- unlist(dbGetQuery(conn, Query))
+  )))
   # species --------------------------------------------------------------------
   message("OK\nImporting taxonomic list ... ", appendLF = FALSE)
   suppressMessages(veg_obj$species <- db2taxlist(conn,
@@ -55,11 +66,25 @@ db2vegtable.PostgreSQLConnection <- function(conn,
   ))
   # header ---------------------------------------------------------------------
   message("OK\nImporting header table and relations ... ", appendLF = FALSE)
-  Query <- paste(
-    "select column_name", "from information_schema.columns",
-    "where table_schema = 'environment'", "and table_name = 'header'"
-  )
-  header_cols <- unlist(dbGetQuery(conn, Query))
+  if (!missing(header_cols)) {
+    header_cols <- unique(c("releve_id", header_cols, geometry))
+    header_cols <- header_cols[
+      header_cols %in%
+        unlist(dbGetQuery(conn, paste(
+          "select column_name",
+          "from information_schema.columns",
+          "where table_schema = 'environment'",
+          "and table_name = 'header'"
+        )))
+    ]
+  } else {
+    header_cols <- unlist(dbGetQuery(conn, paste(
+      "select column_name",
+      "from information_schema.columns",
+      "where table_schema = 'environment'",
+      "and table_name = 'header'"
+    )))
+  }
   if (!geometry %in% header_cols) {
     stop(paste0(
       "Wrong value for 'geometry': Variable '", geometry,
@@ -67,12 +92,11 @@ db2vegtable.PostgreSQLConnection <- function(conn,
     ))
   }
   header_cols <- header_cols[header_cols != geometry]
-  Query <- paste(
+  veg_obj$header <- dbGetQuery(conn, paste(
     "select", paste0(header_cols, collapse = ","),
     "from environment.\"header\"",
     paste0("where db_name ='", database, "'")
-  )
-  veg_obj$header <- dbGetQuery(conn, Query)
+  ))
   veg_obj$header <- veg_obj$header[, apply(
     veg_obj$header, 2,
     function(x) !all(is.na(x))
@@ -197,7 +221,7 @@ db2vegtable.PostgreSQLConnection <- function(conn,
       t_geometry[[i]] <- 1:nrow(t_geometry)
       veg_obj$header[, i] <- with(
         t_geometry,
-        get(i)[match(veg_obj$header$releve_id, releve_id)]
+        get(i)[match(veg_obj$header$ReleveID, releve_id)]
       )
       veg_obj$relations[[i]] <- t_geometry[, c(i, "the_geometry")]
     }

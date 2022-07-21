@@ -7,7 +7,14 @@
 \usage{
 db2vegtable(conn, ...)
 
-\method{db2vegtable}{PostgreSQLConnection}(conn, database, geometry = "plot_centroid", as_list = FALSE, ...)
+\method{db2vegtable}{PostgreSQLConnection}(
+  conn,
+  database,
+  header_cols,
+  geometry = "plot_centroid",
+  as_list = FALSE,
+  ...
+)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
@@ -16,6 +23,10 @@ db2vegtable(conn, ...)
 
 \item{database}{Character value indicating the name of the database to be
 imported.}
+
+\item{header_cols}{A character vector including the names of columns from the
+table header to be included in the output data set. If not indicated, all
+columns will be imported.}
 
 \item{geometry}{Character vectors indicating the name of the variables
 stored as geometries in PostGIS.}
