@@ -26,5 +26,7 @@ read_sql <- function(file, end = ";", comment = "--", ...) {
   idx <- c(0, cumsum(idx[-length(idx)]))
   Query <- split(Query, idx)
   names(Query) <- NULL
+  Query <- sapply(Query, function(x) paste0(x, collapse = ""))
+  Query <- structure(Query, class = c("sql", "character"))
   return(Query)
 }
