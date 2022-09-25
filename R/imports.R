@@ -8,11 +8,11 @@
 #' @importFrom taxlist accepted_name clean_strings merge_taxa
 #' @importFrom tcltk tclVar tclvalue tkbind tkbutton tkdestroy tkentry tkfocus
 #'     tkgrid tkgrid.configure tklabel tktoplevel tkwait.window tkwm.title
-#' @importMethodsFrom RPostgreSQL dbConnect dbDisconnect
+#' @importMethodsFrom RPostgreSQL dbConnect dbDisconnect dbReadTable
+#' @importClassesFrom biblio lib_df
 #' @importClassesFrom RPostgreSQL PostgreSQLConnection
 #' @importClassesFrom taxlist taxlist
 #' @importClassesFrom vegtable vegtable
 #' @import taxlist
 #' @import vegtable
 NULL
-# TODO: replace read_pg for a general function working with any DB

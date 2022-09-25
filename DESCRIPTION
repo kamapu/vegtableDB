@@ -10,6 +10,7 @@ Depends:
 	taxlist,
 	vegtable
 Imports:
+    biblio,
     biblioDB,
 	DBI,
 	methods,
