@@ -4,6 +4,7 @@
 #' @importFrom rpostgis pgInsert
 #' @importFrom RPostgres Postgres
 #' @importFrom sf st_read st_geometry<-
+#' @importFrom stats aggregate
 #' @importFrom stringr str_split
 #' @importFrom taxlist accepted_name clean_strings merge_taxa
 #' @importFrom tcltk tclVar tclvalue tkbind tkbutton tkdestroy tkentry tkfocus
