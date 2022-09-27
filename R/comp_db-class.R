@@ -1,11 +1,7 @@
-#' @name comp_df2-class
-#' 
+#' @name comp_db-class
 #' @title Comparison between two reference databases
-#' 
-#' @description 
+#' @description
 #' Extension of class [comp_df-class] applied to comparisons of multiple data
 #' frames.
-#' 
-#' @exportClass comp_df2
-#' 
-setOldClass(c("comp_df2", "list"))
+#' @exportClass comp_db
+setOldClass(c("comp_db", "list"))

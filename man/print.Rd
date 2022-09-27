@@ -9,12 +9,12 @@
 \method{print}{comp_db}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \linkS4class{comp_df2}.}
+\item{x}{An object of class \linkS4class{comp_db}.}
 
 \item{...}{Further arguments passed among methods.}
 }
 \description{
 Comparing multiple pairs of data frames or \linkS4class{lib_df} objects can be
 assigned to a single list setting as class
-\code{class(x) <- c("comp_df2", "list")}.
+\code{class(x) <- c("comp_db", "list")}.
 }

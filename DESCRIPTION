@@ -35,6 +35,7 @@ Collate:
     'imports.R'
     'sql-class.R'
     'lib_db-class.R'
+    'comp_db-class.R'
     'print-methods.R'
     'check_tax.R'
     'connect_db.R'

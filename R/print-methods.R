@@ -7,9 +7,9 @@
 #' @description
 #' Comparing multiple pairs of data frames or [lib_df-class] objects can be
 #' assigned to a single list setting as class
-#' `class(x) <- c("comp_df2", "list")`.
+#' `class(x) <- c("comp_db", "list")`.
 #'
-#' @param x An object of class [comp_df2-class].
+#' @param x An object of class [comp_db-class].
 #' @param ... Further arguments passed among methods.
 #'
 #' @method print comp_db
