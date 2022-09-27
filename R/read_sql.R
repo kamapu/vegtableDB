@@ -14,10 +14,11 @@
 #'     default).
 #' @param ... Further arguments passed to [readLines()].
 #'
+#' @return A [sql-class] object.
+#'
 #' @author Miguel Alvarez
 #'
 #' @export read_sql
-#'
 read_sql <- function(file, end = ";", comment = "--", ...) {
   Query <- readLines(file, ...)
   Query <- Query[!(nchar(Query) == 0 | grepl(comment, Query, fixed = TRUE))]

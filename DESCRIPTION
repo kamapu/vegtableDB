@@ -31,3 +31,27 @@ URL: https://github.com/kamapu/vegtableDB
 BugReports: https://github.com/kamapu/vegtableDB/issues
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
+Collate:
+    'imports.R'
+    'sql-class.R'
+    'lib_db-class.R'
+    'print-methods.R'
+    'check_tax.R'
+    'connect_db.R'
+    'db2lib_db.R'
+    'db2taxlist.R'
+    'db2vegtable.R'
+    'dbSendQuery.R'
+    'do_backup.R'
+    'draw_badge.R'
+    'file_list.R'
+    'compare_df.R'
+    'fix_double.R'
+    'get_precision.R'
+    'insert_concept.R'
+    'insert_synonym.R'
+    'query_concepts.R'
+    'query_names.R'
+    'read_sql.R'
+    'coerce-methods.R'
+

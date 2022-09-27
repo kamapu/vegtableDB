@@ -17,6 +17,9 @@ default).}
 
 \item{...}{Further arguments passed to \code{\link[=readLines]{readLines()}}.}
 }
+\value{
+A \linkS4class{sql} object.
+}
 \description{
 Read SQL scripts and split it in SQL statements
 }

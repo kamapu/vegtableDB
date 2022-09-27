@@ -6,18 +6,87 @@
 library(vegtableDB)
 library(biblio)
 
-source("R/lib_db-class.R")
-source("R/db2lib_db.R")
-source("R/file_list.R")
-
 Bib <- db2lib_db(connect_db("vegetation_v3", user = "miguel"),
     name = "bib_references",
     file_folder = "/media/miguel/miguel2022/soft-copies")
 
-Test <- file_list2string(Bib)
+Refs <- read_bib("../../db-dumps/literatur_db/bib/MiguelReferences.bib")
+Refs <- as(Refs, "lib_db")
+
+# Compare versions
+source("R_old/biblioDB/compare_df.R")
+source("R_old/biblioDB/print-methods.R")
+
+Test <- compare_df(Bib, Refs)
+Test
 
 
-Test <- file_list2string(Bib@file_list)
+
+x <- iris
+y <- iris[ , names(iris) != "Species"]
+x$ord <- 1:nrow(x)
+
+y$new_var <- rep_len(letters, nrow(y))
+y <- do.call(rbind, list(y, y[1:3, ]))
+y$ord <- 1:nrow(y)
+y <- y[-c(5,7), ]
+y[20, 1] <- 1000
+y[95, 4] <- 3000
+
+
+
+compare_df(x, y, "ord")
+
+source("../biblio/R/print.R")
+source("../biblio/R/update_data.R")
+
+z1 <- update_data(x, y, key = "ord", delete = TRUE)
+compare_df(x, z1, "ord")
+
+z2 <- update_data(x, y, key = "ord", add = TRUE)
+compare_df(x, z2, "ord")
+
+z3 <- update_data(x, y, key = "ord", update = TRUE)
+compare_df(x, z3, "ord")
+
+z4 <- update_data(x, y, key = "ord", add = TRUE, delete = TRUE, update = TRUE)
+compare_df(x, z4, "ord")
+
+z5 <- x
+update_data(z5, "ord", add = TRUE) <- y
+compare_df(x, z5, "ord")
+
+
+
+
+object = x
+revision = y
+key = "ord"
+
+
+
+
+
+
+source("../biblio/R/update_data.R")
+
+Test
+
+compare_df(x, x, "ord")
+
+
+key = "ord"
+
+
+
+
+Bib2 <- as(Bib, "lib_df")
+
+Bib3 <- as(Bib2, "lib_db")
+validObject(Bib3)
+
+Bib3 <- Bib
+coerce(Bib3) <- "lib_df"
 
 
 
@@ -56,3 +125,33 @@ Bib <- db2lib_db(connect_db("vegetation_v3", user = "miguel"),
     file_folder = "/media/miguel/miguel2022/soft-copies")
 
 validObject(Bib)
+
+setAs(from = "table", to = "data.frame",
+    def = function(from) {
+      return(as.data.frame(from))
+    },
+    replace = function(from, value) {
+      from <- as(from, value)
+      return(from)
+    })
+
+setAs(from = "table", to = "data.frame",
+    def = function(from) {
+      return(as.data.frame(from))
+    })
+
+data(Titanic)
+x <- Titanic
+
+# two coerce alternatives
+y <- as(x, "data.frame")
+as(x) <- "data.frame"
+
+as(x, "data.frame") <- x
+
+setReplaceMethod("as", signature(object = "table", Class = "missing",
+        value = "character"), 
+    function(object, Class, value) {
+      object <- as(object, value)
+      return(object)
+    })

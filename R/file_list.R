@@ -66,6 +66,9 @@ file_list.lib_df <- function(x, ...) {
       })
       x <- as.data.frame(do.call(rbind, file_string))
       names(x) <- c("bibtexkey", "description", "file", "mime")
+      for (i in c("description", "mime")) {
+        x[x[, i] == "", i] <- NA
+      }
       return(x[, c("bibtexkey", "file", "mime", "description")])
     }
   }
