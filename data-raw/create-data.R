@@ -3,8 +3,8 @@
 # Author: Miguel Alvarez
 ################################################################################
 
-library(vegtableDB)
+library(divDB)
 
-.tax_sql <- read_sql("data-raw/new-taxonomy-schema.sql")
+tax_sql <- read_sql("data-raw/new-taxonomy-schema.sql")
 
-save(.tax_sql, file = "R/sysdata.rda")
+save(tax_sql, file = "R/sysdata.rda")

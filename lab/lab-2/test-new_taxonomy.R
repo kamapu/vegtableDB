@@ -32,8 +32,8 @@ new_taxonomy <- function(conn, x, taxonomy, schema, schema_bib,
       comment <- "Schema created by ''vegtableDB::new_taxonomy()''"
     dbSendQuery(conn, paste0("comment on schema \"", schema, "\" ",
             "is '", comment, "'"))
-    for(i in 1:length(.tax_sql)) {
-      query <- gsub("<schema_name>", paste0("\"", schema, "\""), .tax_sql[i],
+    for(i in 1:length(tax_sql)) {
+      query <- gsub("<schema_name>", paste0("\"", schema, "\""), tax_sql[i],
           fixed = TRUE)
       query <- gsub("<schema_bib_references>", paste0("\"", schema_bib, "\""),
           query, fixed = TRUE)

@@ -3,7 +3,6 @@
 # Author: Miguel Alvarez
 ################################################################################
 
-# Required packages
 library(devtools)
 library(styler)
 
@@ -14,14 +13,26 @@ rm(list = ls())
 unlink(file.path("build-pkg", list.files("build-pkg", ".tar.gz")))
 unlink(file.path("build-pkg", list.files("build-pkg", ".pdf")))
 
-# Apply style and document
+# Write data
+## source("data-raw/create-data.R")
+
+# re-style scripts
 style_pkg()
+
+# Write internal data
+## source("data-raw/write-data.R")
+
+# write documentation
 document()
 
-# Build and check
-pkg_loc <- build(path = "build-pkg")
+# Build and check package
+pkg_loc <- build(path = "build-pkg", args = "--resave-data")
 check_built(path = pkg_loc)
 
-# Build manual and install
+# Post-Test --------------------------------------------------------------------
+
+# write manual
 build_manual(path = "build-pkg")
+
+# install
 install()

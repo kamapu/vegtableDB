@@ -3,12 +3,25 @@
 # Author: Miguel Alvarez
 ################################################################################
 
-library(dbaccess)
-library(vegtable2)
+library(divDB)
 library(RPostgreSQL)
 
 # Arguments to parameters
-conn <- connect_db2(dbname = "veg_databases", user = "miguel")
+conn = connect_db(dbname = "vegetation_v3", user = "miguel")
+## conceps
+taxonomy = "sam_splist"
+schema = "plant_taxonomy"
+subset_levels = TRUE
+keep_parents = FALSE
+keep_children = FALSE
+as_list = FALSE
+
+
+
+
+
+
+
 
 Test <- import_swea(conn)
 

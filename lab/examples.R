@@ -14,11 +14,20 @@ Refs <- read_bib("../../db-dumps/literatur_db/bib/MiguelReferences.bib")
 Refs <- as(Refs, "lib_db")
 
 # Compare versions
-source("R_old/biblioDB/compare_df.R")
-source("R_old/biblioDB/print-methods.R")
-
 Test <- compare_df(Bib, Refs)
 Test
+
+from <- Refs
+x <- Refs
+
+
+
+
+
+
+
+
+
 
 
 
