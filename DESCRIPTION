@@ -12,6 +12,7 @@ Depends:
 	taxlist,
 	vegtable
 Imports:
+    biblio,
     DBI,
 	methods,
 	RPostgreSQL,
@@ -36,3 +37,5 @@ Collate:
     'draw_badge.R'
     'query_concepts.R'
     'query_names.R'
+    'insert_names.R'
+    'new_taxonomy.R'

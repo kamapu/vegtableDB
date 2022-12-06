@@ -13,6 +13,7 @@ db2taxlist(conn, ...)
   taxonomy,
   concepts,
   schema = "plant_taxonomy",
+  schema_refs = "bib_references",
   subset_levels = TRUE,
   keep_parents = FALSE,
   keep_children = FALSE,
@@ -34,6 +35,9 @@ different taxonomy will cause an error message.}
 
 \item{schema}{Character value indicating the name of the schema containing
 taxonomic information within the database.}
+
+\item{schema_refs}{Character value indicating the name of the schema
+containing the electronic library with taxon views.}
 
 \item{subset_levels}{Logical value indicating whether taxonomic ranks should
 be restricted to the used ones or all ranks available in the database.}

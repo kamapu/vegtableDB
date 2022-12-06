@@ -5,6 +5,16 @@
 
 library(divDB)
 
-tax_sql <- read_sql("data-raw/new-taxonomy-schema.sql")
+new_taxonomy_sql <- list()
 
-save(tax_sql, file = "R/sysdata.rda")
+for (i in c(
+  "taxonomies", "taxon_names", "taxon_levels", "taxon_concepts",
+  "names2concepts", "taxon_attributes"
+)) {
+  new_taxonomy_sql[[i]] <- read_sql(paste0("data-raw/", i, ".sql"))
+}
+
+new_taxonomy_sql <- do.call(c, new_taxonomy_sql)
+class(new_taxonomy_sql) <- c("sql", "character")
+
+save(new_taxonomy_sql, file = "R/sysdata.rda")
