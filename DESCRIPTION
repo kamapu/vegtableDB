@@ -37,5 +37,6 @@ Collate:
     'draw_badge.R'
     'query_concepts.R'
     'query_names.R'
+    'append_taxonomy.R'
     'insert_names.R'
     'new_taxonomy.R'

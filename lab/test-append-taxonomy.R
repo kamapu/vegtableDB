@@ -36,6 +36,13 @@ conn <- connect_db("example_db", user = "miguel")
 dbSendQuery(conn, "drop schema if exists plant_taxonomy cascade")
 dbSendQuery(conn, "drop schema if exists bib_references cascade")
 
+schema = "plant_taxonomy"
+schema_refs = "bib_references"
+load("R/sysdata.rda")
+
+
+
+
 new_taxonomy(conn, spp2, taxonomy = "wfo", schema = "plant_taxonomy",
     schema_refs = "bib_references")
 
@@ -57,12 +64,29 @@ colnames(new_names) <- replace_x(colnames(new_names),
     old = c("TaxonName", "AuthorName"),
     new = c("usage_name", "author_name"))
 
+
+# Append new taxonomy
+
+
+
+
+obj@taxonTraits <-
+    data.frame(TaxonConceptID = obj@taxonRelations$TaxonConceptID,
+        t1 = rep("fake trait", nrow(obj@taxonRelations)))
+
+dbSendQuery(conn, paste("alter table plant_taxonomy.taxon_attributes",
+        "add column t1 text"))
+
+
+
 insert_names(conn, new_names, "plant_taxonomy")
 
-## dbGetQuery(conn, "select max(taxon_usage_id) from plant_taxonomy.taxon_names")
-## dbGetQuery(conn,
-##     "select nextval('plant_taxonomy.taxon_names_taxon_usage_id_seq')")
-## dbGetQuery(conn,
-##     "select setval('plant_taxonomy.taxon_names_taxon_usage_id_seq', (select max(taxon_usage_id) from plant_taxonomy.taxon_names))")
+dbGetQuery(conn, "select max(taxon_usage_id) from plant_taxonomy.taxon_names")
+dbGetQuery(conn,
+    "select nextval('plant_taxonomy.taxon_names_taxon_usage_id_seq')")
+dbGetQuery(conn,
+    "select setval('plant_taxonomy.taxon_names_taxon_usage_id_seq', (select max(taxon_usage_id) from plant_taxonomy.taxon_names))")
+
+insert_names(conn, new_names, "plant_taxonomy")
 
 tax_names <- dbReadTable(conn, c("plant_taxonomy", "taxon_names"))

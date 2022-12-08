@@ -47,15 +47,12 @@ setMethod(
       ))
     }
     # Check names in db
-    db_names <- do.call(paste, dbGetQuery(
-      conn,
-      paste(
-        "select usage_name,author_name",
-        paste0("from \"", schema, "\".taxon_names")
-      )
+    db_names <- dbGetQuery(conn, paste(
+      "select taxon_usage_id,usage_name,author_name",
+      paste0("from \"", schema, "\".taxon_names")
     ))
-    in_db <- do.call(paste, df[, c("usage_name", "author_name")]) %in%
-      db_names
+    in_db <- with(df, paste(usage_name, author_name)) %in%
+      with(db_names, paste(usage_name, author_name))
     message(paste0(
       sum(in_db), " names will be recycled\n", sum(!in_db),
       " names will be inserted in the database."
@@ -67,12 +64,19 @@ setMethod(
       paste0("where table_schema = '", schema, "'"),
       "and table_name = 'taxon_names'"
     )))
+    df <- split(df, in_db)
+    un_id <- unlist(dbGetQuery(conn, paste(
+      "select max(taxon_usage_id)",
+      paste0("from \"", schema, "\".taxon_names")
+    )))
+    if (is.na(un_id)) un_id <- 0
+    df$"FALSE"$taxon_usage_id <- un_id + seq_along(df$"FALSE"$TaxonUsageID)
     dbWriteTable(conn, c(schema, "taxon_names"),
-      df[!in_db, colnames(df) %in% tn_col_names],
+      df$"FALSE"[, names(df$"FALSE") %in% tn_col_names],
       append = TRUE, row.names = FALSE
     )
     # Update existing names
-    tn_col_names <- colnames(df)[colnames(df) %in% tn_col_names]
+    tn_col_names <- colnames(df$"TRUE")[colnames(df$"TRUE") %in% tn_col_names]
     tn_col_names <- tn_col_names[!tn_col_names %in%
       c("taxon_usage_id", "usage_name", "author_name")]
     if (length(tn_col_names) > 0) {
@@ -80,7 +84,7 @@ setMethod(
         "select taxon_usage_id,usage_name,author_name",
         paste0("from \"", schema, "\".taxon_names")
       ))
-      up_names <- df[in_db, ]
+      up_names <- df$"TRUE"
       up_names$taxon_usage_id <- db_names$taxon_usage_id[match(
         with(up_names, paste(usage_name, author_name)),
         with(db_names, paste(usage_name, author_name))
@@ -89,10 +93,13 @@ setMethod(
         "taxon_usage_id",
         tn_col_names
       )]
-      update_data(conn, up_names, "taxon_usage_id", c(schema, "taxon_names"),
-        update = TRUE
+      suppressWarnings(
+        update_data(conn, up_names, "taxon_usage_id", c(schema, "taxon_names"),
+          update = TRUE
+        )
       )
+    } else {
+      message("DONE!")
     }
-    message("DONE!")
   }
 )
