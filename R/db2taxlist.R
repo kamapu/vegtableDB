@@ -16,6 +16,8 @@
 #'     different taxonomy will cause an error message.
 #' @param schema Character value indicating the name of the schema containing
 #'     taxonomic information within the database.
+#' @param schema_refs Character value indicating the name of the schema
+#'     containing the electronic library with taxon views.
 #' @param keep_parents A logical value indicating whether parents of queried
 #'     concepts should be included in the output or not. It works only if an
 #'     argument is provided for the parameter `'concepts'`.
@@ -42,6 +44,7 @@ db2taxlist.PostgreSQLConnection <- function(conn,
                                             taxonomy,
                                             concepts,
                                             schema = "plant_taxonomy",
+                                            schema_refs = "bib_references",
                                             subset_levels = TRUE,
                                             keep_parents = FALSE,
                                             keep_children = FALSE,
@@ -265,10 +268,10 @@ db2taxlist.PostgreSQLConnection <- function(conn,
   # Import taxon views
   message("OK\nImporting taxon views ... ", appendLF = FALSE)
   # TODO: Next command may need more arguments to be set
-  species_obj$taxonViews <- read_pg(conn,
-    name = "bib_references",
-    main_table = "main_table"
-  )
+  species_obj$taxonViews <- as(db2lib_db(conn,
+    schema = schema_refs,
+    simplify = TRUE
+  ), "lib_df")
   species_obj$taxonViews <- with(species_obj, {
     taxonViews <- taxonViews[taxonViews$bibtexkey %in%
       taxonRelations$view_key, ]

@@ -169,7 +169,7 @@ db2vegtable.PostgreSQLConnection <- function(conn,
     message("OK\nImporting source references ... ", appendLF = FALSE)
     veg_obj$relations$data_source <- cbind(
       data_source = NA,
-      read_pg(conn, name = "bib_references", main_table = "main_table")
+      as(db2lib_db(conn, schema = "bib_references", simplify = TRUE), "lib_df")
     )
     class(veg_obj$relations$data_source) <- c("lib_df", "data.frame")
     veg_obj$relations$data_source <- with(veg_obj$relations, {
