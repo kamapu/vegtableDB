@@ -70,7 +70,7 @@ setMethod(
       paste0("from \"", schema, "\".taxon_names")
     )))
     if (is.na(un_id)) un_id <- 0
-    df$"FALSE"$taxon_usage_id <- un_id + seq_along(df$"FALSE"$TaxonUsageID)
+    df$"FALSE"$taxon_usage_id <- un_id + seq_along(df$"FALSE"$usage_name)
     dbWriteTable(conn, c(schema, "taxon_names"),
       df$"FALSE"[, names(df$"FALSE") %in% tn_col_names],
       append = TRUE, row.names = FALSE

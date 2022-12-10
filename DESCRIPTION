@@ -40,3 +40,4 @@ Collate:
     'append_taxonomy.R'
     'insert_names.R'
     'new_taxonomy.R'
+    'insert_synonyms.R'
