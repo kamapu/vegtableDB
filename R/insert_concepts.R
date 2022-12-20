@@ -1,4 +1,4 @@
-#' @name insert_concept
+#' @name insert_concepts
 #'
 #' @title Insert taxonomic concepts in database
 #'
@@ -15,28 +15,33 @@
 #'     all taxonomic tables in the database.
 #' @param df A data frame with new names and related information. Two columns
 #'     are mandatory, namely **usage_name** and **author_name**, both as
-#'     character vectors.
+#'     character vectors. Further important columns are **rank** (taxonomic
+#'     rank), **parent_id** (concept ID of the parent taxon), and **view_key**
+#'     (bibtexkey of the reference used as taxon view).
 #' @param clean A logical value indicating cleaning of characters.
 #' @param ... Further arguments passed among methods.
 #'
-#' @rdname insert_concept
+#' @rdname insert_concepts
 #'
 #' @export
-insert_concept <- function(conn, ...) {
-  UseMethod("insert_concept", conn)
+insert_concepts <- function(conn, ...) {
+  UseMethod("insert_concepts", conn)
 }
 
-#' @rdname insert_concept
+#' @rdname insert_concepts
 #'
-#' @aliases insert_concept,PostgreSQLConnection-method
+#' @aliases insert_concepts,PostgreSQLConnection-method
 #'
 #' @export
-insert_concept.PostgreSQLConnection <- function(conn,
-                                                taxonomy,
-                                                schema = "plant_taxonomy",
-                                                df,
-                                                clean = TRUE,
-                                                ...) {
+insert_concepts.PostgreSQLConnection <- function(conn,
+                                                 taxonomy,
+                                                 schema = "plant_taxonomy",
+                                                 df,
+                                                 clean = TRUE,
+                                                 ...) {
+  if (clean) {
+    df <- clean_strings(df)
+  }
   if (any(!c("usage_name", "author_name") %in% colnames(df))) {
     stop(paste(
       "Columns 'usage_name' and 'author_name'",
@@ -58,10 +63,9 @@ insert_concept.PostgreSQLConnection <- function(conn,
       "Use 'insert_synonym()' instead"
     ))
   }
-  if (clean) {
-    df <- clean_strings(df)
-  }
-  # Compare names
+  # Append names
+  insert_names(conn, df, schema)
+  # Retrieve names IDs
   Names <- dbGetQuery(conn, paste(
     "select taxon_usage_id,usage_name,author_name",
     paste0("from \"", schema, "\".taxon_names"),
@@ -71,27 +75,10 @@ insert_concept.PostgreSQLConnection <- function(conn,
       "')"
     )
   ))
-  new_names <- with(df, {
-    full_name <- paste(usage_name, author_name)
-    df[
-      !full_name %in% paste(Names$usage_name, Names$author_name),
-      c("usage_name", "author_name")
-    ]
-  })
-  if (nrow(new_names) > 0) {
-    message("Following taxon usage names will be inserted in the database:")
-    print(new_names)
-    pgInsert(conn, c(schema, "taxon_names"), new_names, partial.match = TRUE)
-    Names <- dbGetQuery(conn, paste(
-      "select taxon_usage_id,usage_name,author_name",
-      paste0("from \"", schema, "\".taxon_names"),
-      paste0(
-        "where usage_name || ' ' || author_name in ('",
-        paste0(paste(df$usage_name, df$author_name), collapse = "','"),
-        "')"
-      )
-    ))
-  }
+  df$taxon_usage_id <- Names$taxon_usage_id[match(
+    with(df, paste(usage_name, author_name)),
+    with(Names, paste(usage_name, author_name))
+  )]
   n2c <- dbGetQuery(conn, paste(
     "select *",
     paste0("from \"", schema, "\".names2concepts"),
@@ -127,7 +114,7 @@ insert_concept.PostgreSQLConnection <- function(conn,
     p1 <- p1[!p1 %in% p2]
     if (length(p1) > 0) {
       stop(paste0(
-        "Following 'parent_id' in 'df' are notincluded as concepts ",
+        "Following 'parent_id' in 'df' are not included as concepts ",
         "in the database:\n", paste0(p1, collapse = ", ")
       ))
     }
@@ -153,11 +140,11 @@ insert_concept.PostgreSQLConnection <- function(conn,
     }
   }
   # Import concept
-  old_concepts <- unlist(dbGetQuery(conn, paste(
-    "select taxon_concept_id",
+  concept_id <- unlist(dbGetQuery(conn, paste(
+    "select max(taxon_concept_id)",
     paste0("from \"", schema, "\".taxon_concepts")
   )))
-  df$taxon_concept_id <- max(old_concepts) + 1:nrow(df)
+  df$taxon_concept_id <- concept_id + 1:nrow(df)
   df$top_view <- taxonomy
   df$name_status <- "accepted"
   df$taxon_usage_id <- with(Names, taxon_usage_id[match(
@@ -166,8 +153,31 @@ insert_concept.PostgreSQLConnection <- function(conn,
       author_name
     )
   )])
+  tax_id <- unlist(dbGetQuery(conn, paste(
+    "select max(tax_id)",
+    paste0("from \"", schema, "\".names2concepts")
+  )))
+  df$tax_id <- tax_id + 1:nrow(df)
   # Insert concepts
-  pgInsert(conn, c(schema, "taxon_concepts"), df, partial.match = TRUE)
-  pgInsert(conn, c(schema, "names2concepts"), df, partial.match = TRUE)
+  tc_col_names <- unlist(dbGetQuery(conn, paste(
+    "select column_name",
+    "from information_schema.columns",
+    paste0("where table_schema = '", schema, "'"),
+    "and table_name = 'taxon_concepts'"
+  )))
+  n2c_col_names <- unlist(dbGetQuery(conn, paste(
+    "select column_name",
+    "from information_schema.columns",
+    paste0("where table_schema = '", schema, "'"),
+    "and table_name = 'names2concepts'"
+  )))
+  dbWriteTable(conn, c(schema, "taxon_concepts"),
+    df[, names(df) %in% tc_col_names],
+    append = TRUE, row.names = FALSE
+  )
+  dbWriteTable(conn, c(schema, "names2concepts"),
+    df[, names(df) %in% n2c_col_names],
+    append = TRUE, row.names = FALSE
+  )
   message("DONE!")
 }

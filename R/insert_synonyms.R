@@ -110,9 +110,9 @@ insert_synonyms.PostgreSQLConnection <- function(conn,
   }
   # Create new IDs
   tax_id <- unlist(dbGetQuery(conn, paste(
-              "select max(tax_id)",
-              paste0("from \"", schema, "\".names2concepts")
-          )))
+    "select max(tax_id)",
+    paste0("from \"", schema, "\".names2concepts")
+  )))
   df$tax_id <- tax_id + seq_along(df$taxon_concept_id)
   dbWriteTable(conn, c(schema, "names2concepts"),
     df[, c("tax_id", "taxon_usage_id", "taxon_concept_id", "name_status")],

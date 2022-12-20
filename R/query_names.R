@@ -69,6 +69,9 @@ query_names.PostgreSQLConnection <- function(conn, query,
     }
   }
   Names <- dbGetQuery(conn, query)
+  if (nrow(Names) == 0) {
+    stop("No names in database matched by 'query'.")
+  }
   if (concepts) {
     query <- paste(
       "select taxon_usage_id,taxon_concept_id,name_status",
