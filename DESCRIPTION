@@ -28,7 +28,7 @@ License: GPL (>= 2)
 URL: https://github.com/kamapu/vegtableDB
 BugReports: https://github.com/kamapu/vegtableDB/issues
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 Collate:
     'imports.R'
     'check_tax.R'
