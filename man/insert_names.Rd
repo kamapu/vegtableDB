@@ -8,7 +8,7 @@
 \usage{
 insert_names(conn, df, schema, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema = "plant_taxonomy", eval = TRUE, ...)
 }
 \arguments{
 \item{conn}{A \linkS4class{PostgreSQLConnection} object connecting to a target
@@ -23,6 +23,9 @@ the taxonomic list. If the table \strong{taxon_names} does not exists in this
 schema, this function retrieves an error message.}
 
 \item{...}{Further arguments passed among methods (not in use).}
+
+\item{eval}{A logical value indicating whether the produced SQL commands
+should be sent to the database or not.}
 }
 \description{
 Different routines may require to compare a list of new names with existing

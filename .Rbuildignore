@@ -8,3 +8,5 @@
 ^\.project$
 ^README\.md$
 ^README\.Rmd$
+
+.log$
