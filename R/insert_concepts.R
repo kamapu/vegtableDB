@@ -75,7 +75,6 @@ insert_concepts.PostgreSQLConnection <- function(conn,
       "\nuse 'insert_names()' in advance!"
     ))
   }
-
   # Retrieve names IDs
   Names <- dbGetQuery(conn, paste(
     "select taxon_usage_id,usage_name,author_name",
@@ -86,7 +85,6 @@ insert_concepts.PostgreSQLConnection <- function(conn,
       "')"
     )
   ))
-
   df$taxon_usage_id <- Names$taxon_usage_id[match(
     with(df, paste(usage_name, author_name)),
     with(Names, paste(usage_name, author_name))

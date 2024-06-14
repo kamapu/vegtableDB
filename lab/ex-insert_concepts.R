@@ -24,53 +24,26 @@ db_name <- "test-db"
 conn <- connect_db(db_name, user = cred["user"], password = cred["password"])
 tax <- db2taxlist(conn, "sam_splist")
 
+# Check occurrence in species list
+summary(tax, "Gnaphalium uliginosum")
+
+# New taxa
 new_spp <- data.frame(
     usage_name = c("Gnaphalium uliginosum", "Gnaphalium exoticum",
         "Gnaphalium communis"),
     author_name =c("L.", "M. Alvarez", "non L."),
     rank = "species",
-    parent_id = 59531,
-    view_key = 1)
+    parent_id = 59531)
 
+# Try with no existing names
+insert_concepts(conn, "sam_splist", df = new_spp, eval = FALSE)
 
-###
-library(RPostgres)
-
-df = new_spp
-schema = "plant_taxonomy"
-clean = TRUE
-eval = TRUE
-taxonomy = "sam_splist"
-
-
-
-
-
-# Do the query and execute
-query <- insert_names(conn, new_spp, schema = "plant_taxonomy",
-    eval = FALSE)
+# With existing name
+query <- insert_concepts(conn, "sam_splist", df = new_spp[1, ], eval = FALSE)
 query
 
-insert_names(conn, new_spp, schema = "plant_taxonomy")
+insert_concepts(conn, "sam_splist", df = new_spp[1, ])
 
-# cross-check
-for (i in new_spp$usage_name)
-  print(query_names(conn, i))
-
-# Including update of values
-new_spp2 <- data.frame(
-    usage_name = c("Gnaphalium uliginosum", "Pseudognaphalium rex"),
-    author_name =c("L.", "M. Alvarez"),
-    wfo_id = c(-1:-2),
-    url = "Error 404")
-
-# Do the query and execute
-query <- insert_names(conn, new_spp2, schema = "plant_taxonomy",
-    eval = FALSE, update = TRUE)
-query
-
-insert_names(conn, new_spp2, schema = "plant_taxonomy", update = TRUE)
-
-# cross-check
-for (i in new_spp2$usage_name)
-  print(query_names(conn, i))
+# Taxonomia
+tax <- db2taxlist(conn, "sam_splist")
+summary(tax, "Gnaphalium uliginosum")
