@@ -1,12 +1,12 @@
 Package: vegtableDB
-Version: 0.0.1.9004
+Version: 0.0.2
 Encoding: UTF-8
 Title: Handling Vegetation Data Sets (Advanced Features)
 Authors@R:
 	person("Miguel", "Alvarez", email="kamapu78@gmail.com",
 		role=c("aut","cre"), comment=c(ORCID="0000-0003-1500-1834"))
 Depends:
-	R(>= 4.0.0),
+	R(>= 4.3.0),
 	divDB,
 	biblioDB,
 	taxlist,
@@ -28,7 +28,7 @@ License: GPL (>= 2)
 URL: https://github.com/kamapu/vegtableDB
 BugReports: https://github.com/kamapu/vegtableDB/issues
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Collate:
     'imports.R'
     'check_tax.R'

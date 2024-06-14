@@ -1,6 +1,5 @@
-vegtableDB 0.0.1
-================
+# vegtableDB 0.1.0
 
-# New Features
+### New features
 
-* Functions adapted from `vegtable2` into the new database format. 
+- First release!
