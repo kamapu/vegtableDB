@@ -10,7 +10,7 @@
 \usage{
 insert_names(conn, df, schema, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, eval = TRUE, update = FALSE, ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, clean = TRUE, eval = TRUE, update = FALSE, ...)
 
 \S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema = "plant_taxonomy", ...)
 }
@@ -27,6 +27,8 @@ the taxonomic list. If the table \strong{taxon_names} does not exists in this
 schema, this function retrieves an error message.}
 
 \item{...}{Further arguments passed among methods (not in use).}
+
+\item{clean}{A logical value indicating cleaning of characters.}
 
 \item{eval}{A logical value indicating whether the produced SQL commands
 should be sent to the database or not.}

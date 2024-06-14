@@ -19,6 +19,8 @@
 #'     rank), **parent_id** (concept ID of the parent taxon), and **view_key**
 #'     (bibtexkey of the reference used as taxon view).
 #' @param clean A logical value indicating cleaning of characters.
+#' @param eval A logical value indicating whether the produced SQL commands
+#'     should be sent to the database or not.
 #' @param ... Further arguments passed among methods.
 #'
 #' @rdname insert_concepts
@@ -29,42 +31,50 @@ insert_concepts <- function(conn, ...) {
 }
 
 #' @rdname insert_concepts
-#'
 #' @aliases insert_concepts,PostgreSQLConnection-method
-#'
 #' @export
 insert_concepts.PostgreSQLConnection <- function(conn,
                                                  taxonomy,
                                                  schema = "plant_taxonomy",
                                                  df,
                                                  clean = TRUE,
+                                                 eval = TRUE,
                                                  ...) {
+  # Clean strings
   if (clean) {
     df <- clean_strings(df)
   }
-  if (any(!c("usage_name", "author_name") %in% colnames(df))) {
-    stop(paste(
-      "Columns 'usage_name' and 'author_name'",
-      "are mandatory in argument 'df'."
+  # Check existence
+  if (!dbExistsTable(conn, c(schema, "taxon_names"))) {
+    stop("The input schema does not contain a table 'taxon_names'")
+  }
+  df_cols <- c("usage_name", "author_name")
+  df_cols <- df_cols[!df_cols %in% names(df)]
+  if (length(df_cols)) {
+    stop(paste0(
+      "Following mandatory columns are missing in 'df': '",
+      paste0(df_cols, collapse = "', '"), "'."
     ))
   }
-  if (any(is.na(df$usage_name))) {
-    stop("NA values are not allowed in column 'usage_name' in 'df'")
-  }
-  if (any(is.na(df$author_name))) {
-    stop("NA values are not allowed in column 'author_name' in 'df'")
-  }
-  if (any(duplicated(df[, c("usage_name", "author_name")]))) {
-    stop("Duplicated combinations detected in 'df'.")
-  }
-  if ("taxon_concept_id" %in% colnames(df)) {
-    stop(paste(
-      "Column 'taxon_concept_id' detected in 'df'.",
-      "Use 'insert_synonym()' instead"
+  # Check if the names already exists in database
+  full_names <- with(df, paste(usage_name, author_name))
+  names_in_db <- unlist(dbGetQuery(
+    conn,
+    paste0(
+      "select usage_name||' '||author_name as full_name\n", "from \"",
+      schema,
+      "\".taxon_names\n", "where usage_name||' '||author_name in ('",
+      paste0(full_names, collapse = "', '"), "')"
+    )
+  ))
+  not_in_db <- full_names[!full_names %in% names_in_db]
+  if (length(not_in_db)) {
+    stop(paste0(
+      "Following names are not yet in database:\n    ",
+      paste0(not_in_db, collapse = "\n    "),
+      "\nuse 'insert_names()' in advance!"
     ))
   }
-  # Append names
-  insert_names(conn, df, schema)
   # Retrieve names IDs
   Names <- dbGetQuery(conn, paste(
     "select taxon_usage_id,usage_name,author_name",
@@ -171,13 +181,21 @@ insert_concepts.PostgreSQLConnection <- function(conn,
     paste0("where table_schema = '", schema, "'"),
     "and table_name = 'names2concepts'"
   )))
-  dbWriteTable(conn, c(schema, "taxon_concepts"),
-    df[, names(df) %in% tc_col_names],
-    append = TRUE, row.names = FALSE
+  # Write queries
+  query <- insert_rows(conn, df[, names(df) %in% tc_col_names],
+    c(schema, "taxon_concepts"),
+    eval = FALSE
   )
-  dbWriteTable(conn, c(schema, "names2concepts"),
-    df[, names(df) %in% n2c_col_names],
-    append = TRUE, row.names = FALSE
-  )
-  message("DONE!")
+  query <- c(query, insert_rows(conn, df[, names(df) %in% n2c_col_names],
+    c(schema, "names2concepts"),
+    eval = FALSE
+  ))
+  class(query) <- c("sql", "character")
+  # Run query, if requested
+  if (eval) {
+    dbSendQuery(conn, query)
+    message("DONE!")
+  }
+  # Return sql invisible
+  invisible(query)
 }
