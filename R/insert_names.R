@@ -22,6 +22,9 @@
 #'     schema, this function retrieves an error message.
 #' @param eval A logical value indicating whether the produced SQL commands
 #'     should be sent to the database or not.
+#' @param update A logical value indicating whether attributes of existing names
+#'     (mentioned as recycled) should be updated according to the input data
+#'     frame or not.
 #' @param ... Further arguments passed among methods (not in use).
 #'
 #' @exportMethod insert_names
@@ -36,7 +39,7 @@ setMethod(
     conn = "PostgreSQLConnection",
     df = "data.frame", schema = "character"
   ),
-  function(conn, df, schema, eval = TRUE, ...) {
+  function(conn, df, schema, eval = TRUE, update = FALSE, ...) {
     if (!dbExistsTable(conn, c(schema, "taxon_names"))) {
       stop("The input schema does not contain a table 'taxon_names'")
     }
@@ -65,12 +68,23 @@ setMethod(
     # split table
     df_recycle <- df[in_db, ]
     df <- df[!in_db, ]
+    # empty query
+    query <- character(0)
+    # update existing names
+    if (update) {
+      query <- c(query, update_rows(conn, df_recycle,
+        name = c(schema, "taxon_names"),
+        key = c("usage_name", "author_name"),
+        eval = FALSE
+      ))
+    }
     # retrieve insert query for new names
-    query <- insert_rows(conn, df,
+    query <- c(query, insert_rows(conn, df,
       name = c(schema, "taxon_names"),
       eval = FALSE
-    )
-    # TODO: Update columns for existing names
+    ))
+    # convert to class sql
+    class(query) <- c("sql", "character")
     # Run query, if requested
     if (eval) {
       dbSendQuery(conn, query)

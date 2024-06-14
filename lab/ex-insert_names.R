@@ -40,3 +40,21 @@ insert_names(conn, new_spp, schema = "plant_taxonomy")
 # cross-check
 for (i in new_spp$usage_name)
   print(query_names(conn, i))
+
+# Including update of values
+new_spp2 <- data.frame(
+    usage_name = c("Gnaphalium uliginosum", "Pseudognaphalium rex"),
+    author_name =c("L.", "M. Alvarez"),
+    wfo_id = c(-1:-2),
+    url = "Error 404")
+
+# Do the query and execute
+query <- insert_names(conn, new_spp2, schema = "plant_taxonomy",
+    eval = FALSE, update = TRUE)
+query
+
+insert_names(conn, new_spp2, schema = "plant_taxonomy", update = TRUE)
+
+# cross-check
+for (i in new_spp2$usage_name)
+  print(query_names(conn, i))

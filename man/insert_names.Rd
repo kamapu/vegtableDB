@@ -10,7 +10,7 @@
 \usage{
 insert_names(conn, df, schema, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, eval = TRUE, ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, eval = TRUE, update = FALSE, ...)
 
 \S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema = "plant_taxonomy", ...)
 }
@@ -30,6 +30,10 @@ schema, this function retrieves an error message.}
 
 \item{eval}{A logical value indicating whether the produced SQL commands
 should be sent to the database or not.}
+
+\item{update}{A logical value indicating whether attributes of existing names
+(mentioned as recycled) should be updated according to the input data
+frame or not.}
 }
 \description{
 Different routines may require to compare a list of new names with existing
