@@ -19,9 +19,6 @@ unlink(file.path("build-pkg", list.files("build-pkg", ".pdf")))
 # re-style scripts
 style_pkg()
 
-# Write internal data
-## source("data-raw/write-data.R")
-
 # write documentation
 document()
 

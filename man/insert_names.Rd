@@ -4,11 +4,15 @@
 \alias{insert_names}
 \alias{insert_names,PostgreSQLConnection,data.frame,character-method}
 \alias{insert_names,PostgreSQL,data.frame,character-method}
+\alias{insert_names,PostgreSQLConnection,data.frame,missing-method}
+\alias{insert_names,PostgreSQL,data.frame,missing-method}
 \title{Insert new taxonomic names in database}
 \usage{
 insert_names(conn, df, schema, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema = "plant_taxonomy", eval = TRUE, ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, eval = TRUE, ...)
+
+\S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema = "plant_taxonomy", ...)
 }
 \arguments{
 \item{conn}{A \linkS4class{PostgreSQLConnection} object connecting to a target

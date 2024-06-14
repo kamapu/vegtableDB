@@ -36,13 +36,13 @@ setMethod(
     conn = "PostgreSQLConnection",
     df = "data.frame", schema = "character"
   ),
-  function(conn, df, schema = "plant_taxonomy", eval = TRUE, ...) {
+  function(conn, df, schema, eval = TRUE, ...) {
     if (!dbExistsTable(conn, c(schema, "taxon_names"))) {
       stop("The input schema does not contain a table 'taxon_names'")
     }
     df_cols <- c("usage_name", "author_name")
     df_cols <- df_cols[!df_cols %in% names(df)]
-    if (length(df_cols) > 0) {
+    if (length(df_cols)) {
       stop(paste0(
         "Following mandatory columns are missing in 'df': '",
         paste0(df_cols, collapse = "', '"), "'."
@@ -53,37 +53,24 @@ setMethod(
       "select taxon_usage_id,usage_name,author_name",
       paste0("from \"", schema, "\".taxon_names")
     ))
-    df$full_name <- with(df, paste(usage_name, author_name))
-    in_db <- df$full_name %in%
+    full_names <- with(df, paste(usage_name, author_name))
+    in_db <- full_names %in%
       with(db_names, paste(usage_name, author_name))
     if (sum(in_db)) {
       message(paste0(
         "Following names will be recycled:\n    ",
-        paste0(df$full_name[in_db], collapse = "\n    ")
+        paste0(full_names[in_db], collapse = "\n    ")
       ))
     }
-    # Get column names
-    tn_col_names <- unlist(dbGetQuery(conn, paste(
-      "select column_name",
-      "from information_schema.columns",
-      paste0("where table_schema = '", schema, "'"),
-      "and table_name = 'taxon_names'"
-    )))
-    cols_in_db <- names(df)[names(df) %in% tn_col_names]
-    # New names to insert
-    new_names <- do_character(df[!in_db, cols_in_db])
-    query_values <- paste0(
-      "(",
-      apply(new_names[cols_in_db], 1, paste, collapse = ","), ")"
-    )
-    query <- paste0(
-      "insert into \"", schema, "\".taxon_names (\"",
-      paste0(names(new_names), collapse = "\",\""), "\")\nvalues\n",
-      paste0(query_values, collapse = ",\n"), ";"
+    # split table
+    df_recycle <- df[in_db, ]
+    df <- df[!in_db, ]
+    # retrieve insert query for new names
+    query <- insert_rows(conn, df,
+      name = c(schema, "taxon_names"),
+      eval = FALSE
     )
     # TODO: Update columns for existing names
-    # Last steps
-    class(query) <- c("sql", "character")
     # Run query, if requested
     if (eval) {
       dbSendQuery(conn, query)
@@ -91,5 +78,18 @@ setMethod(
     }
     # Return sql invisible
     invisible(query)
+  }
+)
+
+#' @rdname insert_names
+#' @aliases insert_names,PostgreSQL,data.frame,missing-method
+setMethod(
+  "insert_names", signature(
+    conn = "PostgreSQLConnection",
+    df = "data.frame",
+    schema = "missing"
+  ),
+  function(conn, df, schema = "plant_taxonomy", ...) {
+    insert_names(conn = conn, df = df, schema = schema, ...)
   }
 )
