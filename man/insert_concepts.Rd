@@ -14,6 +14,7 @@ insert_concepts(conn, ...)
   schema = "plant_taxonomy",
   df,
   clean = TRUE,
+  eval = TRUE,
   ...
 )
 }
@@ -35,6 +36,9 @@ rank), \strong{parent_id} (concept ID of the parent taxon), and \strong{view_key
 (bibtexkey of the reference used as taxon view).}
 
 \item{clean}{A logical value indicating cleaning of characters.}
+
+\item{eval}{A logical value indicating whether the produced SQL commands
+should be sent to the database or not.}
 }
 \description{
 Insert new taxonomic concepts by using accepted names.

@@ -20,6 +20,7 @@
 #' @param schema A character value indicating the name of the schema containing
 #'     the taxonomic list. If the table **taxon_names** does not exists in this
 #'     schema, this function retrieves an error message.
+#' @param clean A logical value indicating cleaning of characters.
 #' @param eval A logical value indicating whether the produced SQL commands
 #'     should be sent to the database or not.
 #' @param update A logical value indicating whether attributes of existing names
@@ -39,9 +40,12 @@ setMethod(
     conn = "PostgreSQLConnection",
     df = "data.frame", schema = "character"
   ),
-  function(conn, df, schema, eval = TRUE, update = FALSE, ...) {
+  function(conn, df, schema, clean = TRUE, eval = TRUE, update = FALSE, ...) {
     if (!dbExistsTable(conn, c(schema, "taxon_names"))) {
       stop("The input schema does not contain a table 'taxon_names'")
+    }
+    if (clean) {
+      df <- clean_strings(df)
     }
     df_cols <- c("usage_name", "author_name")
     df_cols <- df_cols[!df_cols %in% names(df)]
