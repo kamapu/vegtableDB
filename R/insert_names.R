@@ -82,6 +82,12 @@ setMethod(
         eval = FALSE
       ))
     }
+    # assign new ids
+    usage_id <- unlist(dbGetQuery(conn, paste(
+      "select taxon_usage_id",
+      "from plant_taxonomy.taxon_names"
+    )))
+    df$taxon_usage_id <- id_solver(c(1:nrow(df)), usage_id)
     # retrieve insert query for new names
     query <- c(query, insert_rows(conn, df,
       name = c(schema, "taxon_names"),
