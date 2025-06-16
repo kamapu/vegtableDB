@@ -12,7 +12,7 @@ insert_names(conn, df, schema, ...)
 
 \S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, clean = TRUE, eval = TRUE, update = FALSE, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema = "plant_taxonomy", ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema, ...)
 }
 \arguments{
 \item{conn}{A \linkS4class{PostgreSQLConnection} object connecting to a target

@@ -72,66 +72,93 @@ insert_concepts.PostgreSQLConnection <- function(conn,
   sql <- insert_names(conn, df, schema, eval = FALSE, ...)
   # Retrieving IDs for names
   usage_id <- unlist(dbGetQuery(conn, paste(
-              "select taxon_usage_id",
-              paste0("from \"", schema, "\".taxon_names")
-          )))
+    "select taxon_usage_id",
+    paste0("from \"", schema, "\".taxon_names")
+  )))
   idx <- !full_names %in% names_in_db$full_name
   df$taxon_usage_id[!idx] <- names_in_db$taxon_usage_id
   df$taxon_usage_id[idx] <- id_solver(c(1:sum(idx)), usage_id)
   # Retrieve further ids
   concept_id <- unlist(dbGetQuery(conn, paste(
-              "select taxon_concept_id",
-              paste0("from \"", schema, "\".taxon_concepts"),
-              paste0("where top_view = '", taxonomy, "'"))))
+    "select taxon_concept_id",
+    paste0("from \"", schema, "\".taxon_concepts"),
+    paste0("where top_view = '", taxonomy, "'")
+  )))
   n2c <- dbGetQuery(conn, paste(
-          "select tax_id, taxon_usage_id",
-          paste0("from \"", schema, "\".names2concepts"),
-          paste0("where taxon_concept_id in (", paste0(concept_id,
-                  collapse = ","), ")")))
+    "select tax_id, taxon_usage_id",
+    paste0("from \"", schema, "\".names2concepts"),
+    paste0("where taxon_concept_id in (", paste0(concept_id,
+      collapse = ","
+    ), ")")
+  ))
   # If name already in use
   in_use <- df$taxon_usage_id %in% n2c$taxon_usage_id
-  if (any(in_use))
-    stop(with(df, paste0("Names already used by taxonomy '", taxonomy,
-                "':\n", paste0("    - ", usage_name[in_use],
-                            " (", taxon_usage_id[in_use], ")",
-                            collapse = "\n"))))
+  if (any(in_use)) {
+    stop(with(df, paste0(
+      "Names already used by taxonomy '", taxonomy,
+      "':\n", paste0("    - ", usage_name[in_use],
+        " (", taxon_usage_id[in_use], ")",
+        collapse = "\n"
+      )
+    )))
+  }
   # Solve further ids
   df$taxon_concept_id <- id_solver(c(1:nrow(df)), concept_id)
   df$tax_id <- id_solver(c(1:nrow(df)), n2c$tax_id)
   # Check ranks and parents
   if (all(c("parent_id", "rank") %in% names(df))) {
-    parents_not_in_db <- with(df,
-        parent_id[(!is.na(parent_id)) & (!parent_id %in% concept_id)])
-    if (length(parents_not_in_db))
-      stop(paste0("Following entries of 'parent_id' in 'df'",
-              "does not exist in database:\n", paste0("    - ",
-                  unique(parents_not_in_db), collapse = "\n")))
+    parents_not_in_db <- with(
+      df,
+      parent_id[(!is.na(parent_id)) & (!parent_id %in% concept_id)]
+    )
+    if (length(parents_not_in_db)) {
+      stop(paste0(
+        "Following entries of 'parent_id' in 'df'",
+        "does not exist in database:\n", paste0("    - ",
+          unique(parents_not_in_db),
+          collapse = "\n"
+        )
+      ))
+    }
     rank_table <- dbGetQuery(conn, paste(
-            "select rank, rank_idx",
-            paste0("from \"", schema, "\".taxon_levels")))
+      "select rank, rank_idx",
+      paste0("from \"", schema, "\".taxon_levels")
+    ))
     parents_in_df <- unique(df$parent_id[!is.na(df$parent_id)])
     rank_parents <- dbGetQuery(conn, paste(
-            "select taxon_concept_id, rank",
-            paste0("from \"", schema, "\".taxon_concepts"),
-            paste0("where taxon_concept_id in (", paste0(parents_in_df,
-                    collapse = ","), ")")))
-    rank_parents$rank_idx <- with(rank_table,
-        rank_idx[match(rank_parents$rank, rank)])
+      "select taxon_concept_id, rank",
+      paste0("from \"", schema, "\".taxon_concepts"),
+      paste0("where taxon_concept_id in (", paste0(parents_in_df,
+        collapse = ","
+      ), ")")
+    ))
+    rank_parents$rank_idx <- with(
+      rank_table,
+      rank_idx[match(rank_parents$rank, rank)]
+    )
     df_rank_table <- data.frame(
-        level = with(rank_table, rank_idx[match(df$rank, rank)]),
-        parent_level = with(rank_parents,
-            rank_idx[match(df$parent_id, taxon_concept_id)]))
-    if(any(df_rank_table$level >= df_rank_table$parent_level))
-      stop(paste("Some of the proposed parents have the same ",
-              "or lower rank than the respective child"))
+      level = with(rank_table, rank_idx[match(df$rank, rank)]),
+      parent_level = with(
+        rank_parents,
+        rank_idx[match(df$parent_id, taxon_concept_id)]
+      )
+    )
+    if (any(df_rank_table$level >= df_rank_table$parent_level)) {
+      stop(paste(
+        "Some of the proposed parents have the same ",
+        "or lower rank than the respective child"
+      ))
+    }
   }
   # Insert rows suppressing warnings
   suppressWarnings({
-        sql <- c(sql, insert_rows(conn, df, c(schema, "taxon_concepts"),
-                eval = FALSE))
-        sql <- c(sql, insert_rows(conn, df, c(schema, "names2concepts"),
-                eval = FALSE))
-      })
+    sql <- c(sql, insert_rows(conn, df, c(schema, "taxon_concepts"),
+      eval = FALSE
+    ))
+    sql <- c(sql, insert_rows(conn, df, c(schema, "names2concepts"),
+      eval = FALSE
+    ))
+  })
   # TODO: Define a function for updating and inserting species attributes.
   class(sql) <- c("sql", "character")
   # Run query, if requested

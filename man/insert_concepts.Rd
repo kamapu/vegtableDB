@@ -21,7 +21,7 @@ insert_concepts(conn, ...)
 \arguments{
 \item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
 
-\item{...}{Further arguments passed among methods.}
+\item{...}{Further arguments passed to \code{\link[=insert_names]{insert_names()}}.}
 
 \item{taxonomy}{Character value with the name of the taxonomy in the
 database.}
