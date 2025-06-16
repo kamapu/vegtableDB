@@ -15,7 +15,7 @@ db_name <- "vegetation-db"
 
 ## sort_releases(db_path, db_name)
 
-build_db(db_path, db_name, release = 6, user = cred["user"],
+build_db(db_path, db_name, release = 7, user = cred["user"],
     password = cred["password"], auxiliar_db = "test-db", overwrite = TRUE)
 
 db_name <- "test-db"
@@ -35,6 +35,13 @@ new_spp <- data.frame(
     rank = "species",
     parent_id = 59531)
 
+library(RPostgres)
+df = new_spp
+clean = TRUE
+schema = "plant_taxonomy"
+taxonomy = "sam_splist"
+
+
 # Try with no existing names
 insert_concepts(conn, "sam_splist", df = new_spp, eval = FALSE)
 
@@ -47,3 +54,5 @@ insert_concepts(conn, "sam_splist", df = new_spp[1, ])
 # Taxonomia
 tax <- db2taxlist(conn, "sam_splist")
 summary(tax, "Gnaphalium uliginosum")
+
+# TODO: EXAMPLE with existing concept

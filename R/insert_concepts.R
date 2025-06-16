@@ -21,7 +21,7 @@
 #' @param clean A logical value indicating cleaning of characters.
 #' @param eval A logical value indicating whether the produced SQL commands
 #'     should be sent to the database or not.
-#' @param ... Further arguments passed among methods.
+#' @param ... Further arguments passed to [insert_names()].
 #'
 #' @rdname insert_concepts
 #'
@@ -58,139 +58,82 @@ insert_concepts.PostgreSQLConnection <- function(conn,
   }
   # Check if the names already exists in database
   full_names <- with(df, paste(usage_name, author_name))
-  names_in_db <- unlist(dbGetQuery(
+  names_in_db <- dbGetQuery(
     conn,
     paste0(
-      "select usage_name||' '||author_name as full_name\n", "from \"",
+      "select taxon_usage_id, usage_name||' '||author_name as full_name\n",
+      "from \"",
       schema,
       "\".taxon_names\n", "where usage_name||' '||author_name in ('",
       paste0(full_names, collapse = "', '"), "')"
     )
-  ))
-  not_in_db <- full_names[!full_names %in% names_in_db]
-  if (length(not_in_db)) {
-    stop(paste0(
-      "Following names are not yet in database:\n    ",
-      paste0(not_in_db, collapse = "\n    "),
-      "\nuse 'insert_names()' in advance!"
-    ))
-  }
-  # Retrieve names IDs
-  Names <- dbGetQuery(conn, paste(
-    "select taxon_usage_id,usage_name,author_name",
-    paste0("from \"", schema, "\".taxon_names"),
-    paste0(
-      "where usage_name || ' ' || author_name in ('",
-      paste0(paste(df$usage_name, df$author_name), collapse = "','"),
-      "')"
-    )
-  ))
-  df$taxon_usage_id <- Names$taxon_usage_id[match(
-    with(df, paste(usage_name, author_name)),
-    with(Names, paste(usage_name, author_name))
-  )]
-  n2c <- dbGetQuery(conn, paste(
-    "select *",
-    paste0("from \"", schema, "\".names2concepts"),
-    paste0("where taxon_usage_id in (", paste0(Names$taxon_usage_id,
-      collapse = ","
-    ), ")")
-  ))
-  if (nrow(n2c) > 0) {
-    conc_id <- unlist(dbGetQuery(conn, paste(
-      "select taxon_concept_id",
-      paste0("from \"", schema, "\".taxon_concepts"),
-      paste0("where taxon_concept_id in (", paste0(n2c$taxon_concept_id,
-        collapse = ","
-      ), ")"),
-      paste0("and top_view = '", taxonomy, "'")
-    )))
-    n2c <- n2c[n2c$taxon_concept_id %in% conc_id, ]
-  }
-  if (nrow(n2c) > 0) {
-    stop(paste0(
-      "Following concepts are already using the requested names:\n",
-      paste0(n2c$taxon_concept_id, collapse = ", ")
-    ))
-  }
-  # Cross-check parents
-  if ("parent_id" %in% names(df)) {
-    p1 <- unique(df$parent_id[!is.na(df$parent_id)])
-    p2 <- unlist(dbGetQuery(conn, paste(
-      "select taxon_concept_id",
-      paste0("from ", schema, ".taxon_concepts"),
-      paste0("where taxon_concept_id in (", paste0(p1, collapse = ","), ")")
-    )))
-    p1 <- p1[!p1 %in% p2]
-    if (length(p1) > 0) {
-      stop(paste0(
-        "Following 'parent_id' in 'df' are not included as concepts ",
-        "in the database:\n", paste0(p1, collapse = ", ")
-      ))
-    }
-  }
-  # Cross-check taxonomic ranks
-  if ("rank" %in% names(df)) {
-    r1 <- unique(paste(df$rank[!is.na(df$rank)]))
-    r2 <- unlist(dbGetQuery(conn, paste(
-      "select \"rank\"",
-      paste0("from \"", schema, "\".taxon_levels"),
-      paste0(
-        "where \"rank\" in ('", paste0(r1, collapse = "','"),
-        "')"
-      )
-    )))
-    r1 <- r1[!r1 %in% r2]
-    if (length(r1) > 0) {
-      stop(paste0(
-        "Following values for 'rank' are not included",
-        "in the database:\n",
-        paste0(r2, collapse = ", ")
-      ))
-    }
-  }
-  # Import concept
-  concept_id <- unlist(dbGetQuery(conn, paste(
-    "select max(taxon_concept_id)",
-    paste0("from \"", schema, "\".taxon_concepts")
-  )))
-  df$taxon_concept_id <- concept_id + 1:nrow(df)
-  df$top_view <- taxonomy
-  df$name_status <- "accepted"
-  df$taxon_usage_id <- with(Names, taxon_usage_id[match(
-    paste(df$usage_name, df$author_name), paste(
-      usage_name,
-      author_name
-    )
-  )])
-  tax_id <- unlist(dbGetQuery(conn, paste(
-    "select max(tax_id)",
-    paste0("from \"", schema, "\".names2concepts")
-  )))
-  df$tax_id <- tax_id + 1:nrow(df)
-  # Insert concepts
-  tc_col_names <- unlist(dbGetQuery(conn, paste(
-    "select column_name",
-    "from information_schema.columns",
-    paste0("where table_schema = '", schema, "'"),
-    "and table_name = 'taxon_concepts'"
-  )))
-  n2c_col_names <- unlist(dbGetQuery(conn, paste(
-    "select column_name",
-    "from information_schema.columns",
-    paste0("where table_schema = '", schema, "'"),
-    "and table_name = 'names2concepts'"
-  )))
-  # Write queries
-  query <- insert_rows(conn, df[, names(df) %in% tc_col_names],
-    c(schema, "taxon_concepts"),
-    eval = FALSE
   )
-  query <- c(query, insert_rows(conn, df[, names(df) %in% n2c_col_names],
-    c(schema, "names2concepts"),
-    eval = FALSE
-  ))
-  class(query) <- c("sql", "character")
+  # Update names
+  sql <- insert_names(conn, df, schema, eval = FALSE, ...)
+  # Retrieving IDs for names
+  usage_id <- unlist(dbGetQuery(conn, paste(
+              "select taxon_usage_id",
+              paste0("from \"", schema, "\".taxon_names")
+          )))
+  idx <- !full_names %in% names_in_db$full_name
+  df$taxon_usage_id[!idx] <- names_in_db$taxon_usage_id
+  df$taxon_usage_id[idx] <- id_solver(c(1:sum(idx)), usage_id)
+  # Retrieve further ids
+  concept_id <- unlist(dbGetQuery(conn, paste(
+              "select taxon_concept_id",
+              paste0("from \"", schema, "\".taxon_concepts"),
+              paste0("where top_view = '", taxonomy, "'"))))
+  n2c <- dbGetQuery(conn, paste(
+          "select tax_id, taxon_usage_id",
+          paste0("from \"", schema, "\".names2concepts"),
+          paste0("where taxon_concept_id in (", paste0(concept_id,
+                  collapse = ","), ")")))
+  # If name already in use
+  in_use <- df$taxon_usage_id %in% n2c$taxon_usage_id
+  if (any(in_use))
+    stop(with(df, paste0("Names already used by taxonomy '", taxonomy,
+                "':\n", paste0("    - ", usage_name[in_use],
+                            " (", taxon_usage_id[in_use], ")",
+                            collapse = "\n"))))
+  # Solve further ids
+  df$taxon_concept_id <- id_solver(c(1:nrow(df)), concept_id)
+  df$tax_id <- id_solver(c(1:nrow(df)), n2c$tax_id)
+  # Check ranks and parents
+  if (all(c("parent_id", "rank") %in% names(df))) {
+    parents_not_in_db <- with(df,
+        parent_id[(!is.na(parent_id)) & (!parent_id %in% concept_id)])
+    if (length(parents_not_in_db))
+      stop(paste0("Following entries of 'parent_id' in 'df'",
+              "does not exist in database:\n", paste0("    - ",
+                  unique(parents_not_in_db), collapse = "\n")))
+    rank_table <- dbGetQuery(conn, paste(
+            "select rank, rank_idx",
+            paste0("from \"", schema, "\".taxon_levels")))
+    parents_in_df <- unique(df$parent_id[!is.na(df$parent_id)])
+    rank_parents <- dbGetQuery(conn, paste(
+            "select taxon_concept_id, rank",
+            paste0("from \"", schema, "\".taxon_concepts"),
+            paste0("where taxon_concept_id in (", paste0(parents_in_df,
+                    collapse = ","), ")")))
+    rank_parents$rank_idx <- with(rank_table,
+        rank_idx[match(rank_parents$rank, rank)])
+    df_rank_table <- data.frame(
+        level = with(rank_table, rank_idx[match(df$rank, rank)]),
+        parent_level = with(rank_parents,
+            rank_idx[match(df$parent_id, taxon_concept_id)]))
+    if(any(df_rank_table$level >= df_rank_table$parent_level))
+      stop(paste("Some of the proposed parents have the same ",
+              "or lower rank than the respective child"))
+  }
+  # Insert rows suppressing warnings
+  suppressWarnings({
+        sql <- c(sql, insert_rows(conn, df, c(schema, "taxon_concepts"),
+                eval = FALSE))
+        sql <- c(sql, insert_rows(conn, df, c(schema, "names2concepts"),
+                eval = FALSE))
+      })
+  # TODO: Define a function for updating and inserting species attributes.
+  class(sql) <- c("sql", "character")
   # Run query, if requested
   if (eval) {
     dbSendQuery(conn, query)

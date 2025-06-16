@@ -30,18 +30,6 @@ new_spp <- data.frame(
     author_name =c("L.", "M. Alvarez", "non L."),
     wfo_id = c(-1:-3))
 
-
-
-library(RPostgres)
-df= new_spp
-schema = "plant_taxonomy"
-clean = TRUE
-
-
-
-
-
-
 # Do the query and execute
 query <- insert_names(conn, new_spp, schema = "plant_taxonomy",
     eval = FALSE)
