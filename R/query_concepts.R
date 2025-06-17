@@ -5,7 +5,8 @@
 #' @description
 #' Extract taxonomies by matching character strings.
 #'
-#' @param conn Connection to the database as [PostgreSQLConnection-class].
+#' @param conn Connection to the database as
+#'     [RPostgreSQL::PostgreSQLConnection-class].
 #' @param query A character value that will be matched with the names stored in
 #'     the database.
 #' @param taxonomy Character value with the name of the taxonomy in the
@@ -18,7 +19,7 @@
 #' @param ... Further arguments passed to [db2taxlist()].
 #'
 #' @return
-#' A [taxlist-class] object with the queried taxon concepts.
+#' A [taxlist::taxlist-class] object with the queried taxon concepts.
 #'
 #' @rdname query_concepts
 #'

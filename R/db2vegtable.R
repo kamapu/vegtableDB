@@ -4,14 +4,14 @@
 #'
 #' @description
 #' Import and adaption of Postgres tables into objects of class
-#' [vegtable-class].
+#' [vegtable::vegtable-class].
 #'
 #' In the case that some schemas are not mentioned, the function assumes such
 #' tables are located in the same schema as the table header. Thus for
 #' databases placed in just one schema, this need to be set only in argument
 #' `header_schema`.
 #'
-#' @param conn A database connection provided by [dbConnect()].
+#' @param conn A database connection provided by [divDB::connect_db()].
 #' @param database Character value indicating the name of the database to be
 #'     imported.
 #' @param header_cols A character vector including the names of columns from the
@@ -20,7 +20,7 @@
 #' @param geometry Character vectors indicating the name of the variables
 #'     stored as geometries in PostGIS.
 #' @param as_list Logical value indicating whether a list or an object of class
-#'     [vegtable-class] should be returned.
+#'     [vegtable::vegtable-class] should be returned.
 #' @param ... Further arguments passed to [db2taxlist()].
 #'
 #' @rdname db2vegtable

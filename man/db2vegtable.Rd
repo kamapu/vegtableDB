@@ -17,7 +17,7 @@ db2vegtable(conn, ...)
 )
 }
 \arguments{
-\item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
+\item{conn}{A database connection provided by \code{\link[divDB:connect_db]{divDB::connect_db()}}.}
 
 \item{...}{Further arguments passed to \code{\link[=db2taxlist]{db2taxlist()}}.}
 
@@ -32,11 +32,11 @@ columns will be imported.}
 stored as geometries in PostGIS.}
 
 \item{as_list}{Logical value indicating whether a list or an object of class
-\linkS4class{vegtable} should be returned.}
+\link[vegtable:vegtable-class]{vegtable::vegtable} should be returned.}
 }
 \description{
 Import and adaption of Postgres tables into objects of class
-\linkS4class{vegtable}.
+\link[vegtable:vegtable-class]{vegtable::vegtable}.
 
 In the case that some schemas are not mentioned, the function assumes such
 tables are located in the same schema as the table header. Thus for

@@ -10,9 +10,9 @@
 #' If 'obj' is missing an empty database will be created. You can than use
 #' [append_taxonomy()] to insert a taxonomy in the empty database.
 #'
-#' @param conn A [PostgreSQLConnection-class] connecting to a database, where
-#'     the new list will be stored.
-#' @param obj A [taxlist-class] object containing the new database.
+#' @param conn A [RPostgreSQL::PostgreSQLConnection-class] connecting to a
+#'     database, where the new list will be stored.
+#' @param obj A [taxlist::taxlist-class] object containing the new database.
 #' @param taxonomy A character value indicating the name (ID) of the new
 #'     taxonomy in the database.
 #' @param schema A character value with the name of the new schema containing
@@ -20,14 +20,15 @@
 #' @param schema_refs A character value with the name of the new schema
 #'     containing the references used as taxon views. It is recommended to have
 #'     a separated schema for the references, especially if the views are
-#'     formated as a BibTeX database ([lib_df-class] object).
+#'     formated as a BibTeX database ([biblio::lib_df-class] object).
 #' @param add_attributes A data frame used to add further columns into the table
 #'     **taxon_attributes** in the database. The data frame has three mandatory
 #'     columns, **name**, **type** (type of variable, which may include
-#'     constraints) and **comment**. See [add_columns()] for more details.
+#'     constraints) and **comment**. See [divDB::add_columns()] for more
+#'     details.
 #' @param add_to_names A data frame used to add further columns into the table
 #'     **taxon_names** in the database. See details for argument
-#'     `'add_attributes'` and in [add_columns()].
+#'     `'add_attributes'` and in [divDB::add_columns()].
 #' @param ... Further arguments passed among methods (not in use).
 #'
 #' @exportMethod new_taxonomy

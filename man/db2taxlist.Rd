@@ -22,7 +22,7 @@ db2taxlist(conn, ...)
 )
 }
 \arguments{
-\item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
+\item{conn}{A database connection provided by \code{\link[divDB:connect_db]{divDB::connect_db()}}.}
 
 \item{...}{Further arguments passed among methods (not used here).}
 
@@ -51,11 +51,11 @@ concepts should be included in the output or not. It works only if an
 argument is provided for the parameter \code{'concepts'}.}
 
 \item{as_list}{Logical value indicating whether the output should be a list
-or a \linkS4class{taxlist} object.}
+or a \link[taxlist:taxlist-class]{taxlist::taxlist} object.}
 }
 \description{
 Ad-hoc function for importing Postgres tables into objects of class
-\linkS4class{taxlist}.
+\link[taxlist:taxlist-class]{taxlist::taxlist}.
 
 This function has been modified to a new version of the database.
 }

@@ -12,11 +12,11 @@ insert_names(conn, df, schema, ...)
 
 \S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, clean = TRUE, eval = TRUE, update = FALSE, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema = "plant_taxonomy", ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema, ...)
 }
 \arguments{
-\item{conn}{A \linkS4class{PostgreSQLConnection} object connecting to a target
-database.}
+\item{conn}{A \link[RPostgreSQL:PostgreSQLConnection-class]{RPostgreSQL::PostgreSQLConnection} object connecting to
+a target database.}
 
 \item{df}{A data frame with the list of names that will be inserted to the
 database. Two columns are mandatory in this data frame, namely

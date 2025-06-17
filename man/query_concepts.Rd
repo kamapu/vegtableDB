@@ -19,7 +19,8 @@ query_concepts(conn, ...)
 )
 }
 \arguments{
-\item{conn}{Connection to the database as \linkS4class{PostgreSQLConnection}.}
+\item{conn}{Connection to the database as
+\link[RPostgreSQL:PostgreSQLConnection-class]{RPostgreSQL::PostgreSQLConnection}.}
 
 \item{...}{Further arguments passed to \code{\link[=db2taxlist]{db2taxlist()}}.}
 
@@ -38,7 +39,7 @@ sensitive (\code{TRUE}) or not (\code{FALSE}, the default).}
 \item{exact}{A logical value indicating whether the exact string is queried.}
 }
 \value{
-A \linkS4class{taxlist} object with the queried taxon concepts.
+A \link[taxlist:taxlist-class]{taxlist::taxlist} object with the queried taxon concepts.
 }
 \description{
 Extract taxonomies by matching character strings.

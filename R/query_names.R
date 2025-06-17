@@ -9,7 +9,8 @@
 #' This function can also provide details about the associated taxon concpets,
 #' taxonomies and accepted names for each taxonomy.
 #'
-#' @param conn Connection to the database as [PostgreSQLConnection-class].
+#' @param conn Connection to the database as
+#'     [RPostgreSQL::PostgreSQLConnection-class].
 #' @param query A character value that will be matched with the names stored in
 #'     the database.
 #' @param schema Character value indicating the name of the schema containing

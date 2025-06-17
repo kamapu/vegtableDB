@@ -10,10 +10,10 @@ append_taxonomy(conn, obj, ...)
 \S4method{append_taxonomy}{PostgreSQLConnection,taxlist}(conn, obj, taxonomy, schema, schema_refs, ...)
 }
 \arguments{
-\item{conn}{A \linkS4class{PostgreSQLConnection} connecting to a database, where
-the new list will be stored.}
+\item{conn}{A \link[RPostgreSQL:PostgreSQLConnection-class]{RPostgreSQL::PostgreSQLConnection} connecting to a
+database, where the new list will be stored.}
 
-\item{obj}{A \linkS4class{taxlist} object containing the new taxonomy.}
+\item{obj}{A \link[taxlist:taxlist-class]{taxlist::taxlist} object containing the new taxonomy.}
 
 \item{...}{Further arguments passed among methods (not in use).}
 
@@ -26,7 +26,7 @@ the taxonomic list.}
 \item{schema_refs}{A character value with the name of the new schema
 containing the references used as taxon views. It is recommended to have
 a separated schema for the references, especially if the views are
-formated as a BibTeX database (\linkS4class{lib_df} object).}
+formated as a BibTeX database (\link[biblio:lib_df-class]{biblio::lib_df} object).}
 }
 \description{
 New taxonomies can be appended to the same database structure.

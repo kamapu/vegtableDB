@@ -15,7 +15,7 @@ db_name <- "vegetation-db"
 
 ## sort_releases(db_path, db_name)
 
-build_db(db_path, db_name, release = 6, user = cred["user"],
+build_db(db_path, db_name, release = 7, user = cred["user"],
     password = cred["password"], auxiliar_db = "test-db", overwrite = TRUE)
 
 db_name <- "test-db"

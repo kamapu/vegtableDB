@@ -8,7 +8,8 @@
 #' This function carry out some additional checks to ensure consistent
 #' taxonomic data.
 #'
-#' @param conn Connection to the database as [PostgreSQLConnection-class].
+#' @param conn Connection to the database as
+#'     [RPostgreSQL::PostgreSQLConnection-class].
 #' @param schema Character value indicating the name of the schema containing
 #'     taxonomic information within the database.
 #' @param ... Further arguments passed among methods.

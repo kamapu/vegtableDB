@@ -11,7 +11,8 @@ check_tax(conn, ...)
 \method{check_tax}{PostgreSQLConnection}(conn, schema = "plant_taxonomy", ...)
 }
 \arguments{
-\item{conn}{Connection to the database as \linkS4class{PostgreSQLConnection}.}
+\item{conn}{Connection to the database as
+\link[RPostgreSQL:PostgreSQLConnection-class]{RPostgreSQL::PostgreSQLConnection}.}
 
 \item{...}{Further arguments passed among methods.}
 

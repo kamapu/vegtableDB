@@ -12,8 +12,8 @@
 #' For existing names, if further information is provided, this will be updated
 #' in the database.
 #'
-#' @param conn A [PostgreSQLConnection-class] object connecting to a target
-#'     database.
+#' @param conn A [RPostgreSQL::PostgreSQLConnection-class] object connecting to
+#'     a target database.
 #' @param df A data frame with the list of names that will be inserted to the
 #'     database. Two columns are mandatory in this data frame, namely
 #'     **usage_name** and **author_name**.
@@ -82,6 +82,12 @@ setMethod(
         eval = FALSE
       ))
     }
+    # assign new ids
+    usage_id <- unlist(dbGetQuery(conn, paste(
+      "select taxon_usage_id",
+      paste0("from \"", schema, "\".taxon_names")
+    )))
+    df$taxon_usage_id <- id_solver(c(1:nrow(df)), usage_id)
     # retrieve insert query for new names
     query <- c(query, insert_rows(conn, df,
       name = c(schema, "taxon_names"),
@@ -107,7 +113,7 @@ setMethod(
     df = "data.frame",
     schema = "missing"
   ),
-  function(conn, df, schema = "plant_taxonomy", ...) {
-    insert_names(conn = conn, df = df, schema = schema, ...)
+  function(conn, df, ...) {
+    insert_names(conn = conn, df = df, schema = "plant_taxonomy", ...)
   }
 )
