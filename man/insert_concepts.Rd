@@ -19,7 +19,7 @@ insert_concepts(conn, ...)
 )
 }
 \arguments{
-\item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
+\item{conn}{A database connection provided by \code{\link[divDB:connect_db]{divDB::connect_db()}}.}
 
 \item{...}{Further arguments passed to \code{\link[=insert_names]{insert_names()}}.}
 

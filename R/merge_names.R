@@ -11,7 +11,8 @@
 #' The raplacement need to consider potential issues caused by inserting the new
 #' name and do updates in multiple tables.
 #'
-#' @param conn Connection to the database as [PostgreSQLConnection-class].
+#' @param conn Connection to the database as
+#'     [RPostgreSQL::PostgreSQLConnection-class].
 #' @param usage_id A vector of Identifiers for the name. The first value will be
 #'     used as the new name and any other will be replaced by the first.
 #'     Note that at the end of this process all names but the first will be

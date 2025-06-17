@@ -4,11 +4,11 @@
 #'
 #' @description
 #' Ad-hoc function for importing Postgres tables into objects of class
-#' [taxlist-class].
+#' [taxlist::taxlist-class].
 #'
 #' This function has been modified to a new version of the database.
 #'
-#' @param conn A database connection provided by [dbConnect()].
+#' @param conn A database connection provided by [divDB::connect_db()].
 #' @param taxonomy Character value with the name of the taxonomy in the
 #'     database.
 #' @param concepts A vector with taxon concept IDs to be included in the output.
@@ -27,7 +27,7 @@
 #' @param subset_levels Logical value indicating whether taxonomic ranks should
 #'     be restricted to the used ones or all ranks available in the database.
 #' @param as_list Logical value indicating whether the output should be a list
-#'     or a [taxlist-class] object.
+#'     or a [taxlist::taxlist-class] object.
 #' @param ... Further arguments passed among methods (not used here).
 #'
 #' @rdname db2taxlist

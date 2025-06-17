@@ -12,8 +12,8 @@
 #' For existing names, if further information is provided, this will be updated
 #' in the database.
 #'
-#' @param conn A [PostgreSQLConnection-class] object connecting to a target
-#'     database.
+#' @param conn A [RPostgreSQL::PostgreSQLConnection-class] object connecting to
+#'     a target database.
 #' @param df A data frame with the list of names that will be inserted to the
 #'     database. Two columns are mandatory in this data frame, namely
 #'     **usage_name** and **author_name**.

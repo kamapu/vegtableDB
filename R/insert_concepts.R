@@ -8,7 +8,7 @@
 #' Names that are new for the database will be inserted in the main list of
 #' names.
 #'
-#' @param conn A database connection provided by [dbConnect()].
+#' @param conn A database connection provided by [divDB::connect_db()].
 #' @param taxonomy Character value with the name of the taxonomy in the
 #'     database.
 #' @param schema Character value indicating the name of the schema containing
@@ -163,9 +163,9 @@ insert_concepts.PostgreSQLConnection <- function(conn,
   class(sql) <- c("sql", "character")
   # Run query, if requested
   if (eval) {
-    dbSendQuery(conn, query)
+    dbSendQuery(conn, sql)
     message("DONE!")
   }
   # Return sql invisible
-  invisible(query)
+  invisible(sql)
 }

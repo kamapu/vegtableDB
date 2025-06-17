@@ -18,7 +18,8 @@ merge_names(conn, ...)
 )
 }
 \arguments{
-\item{conn}{Connection to the database as \linkS4class{PostgreSQLConnection}.}
+\item{conn}{Connection to the database as
+\link[RPostgreSQL:PostgreSQLConnection-class]{RPostgreSQL::PostgreSQLConnection}.}
 
 \item{...}{Further arguments passed among methods.}
 

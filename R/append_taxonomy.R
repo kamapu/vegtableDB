@@ -6,9 +6,9 @@
 #' @description
 #' New taxonomies can be appended to the same database structure.
 #'
-#' @param conn A [PostgreSQLConnection-class] connecting to a database, where
-#'     the new list will be stored.
-#' @param obj A [taxlist-class] object containing the new taxonomy.
+#' @param conn A [RPostgreSQL::PostgreSQLConnection-class] connecting to a
+#'     database, where the new list will be stored.
+#' @param obj A [taxlist::taxlist-class] object containing the new taxonomy.
 #' @param taxonomy A character value indicating the name (ID) of the new
 #'     taxonomy in the database.
 #' @param schema A character value with the name of the new schema containing
@@ -16,7 +16,7 @@
 #' @param schema_refs A character value with the name of the new schema
 #'     containing the references used as taxon views. It is recommended to have
 #'     a separated schema for the references, especially if the views are
-#'     formated as a BibTeX database ([lib_df-class] object).
+#'     formated as a BibTeX database ([biblio::lib_df-class] object).
 #' @param ... Further arguments passed among methods (not in use).
 #'
 #' @exportMethod append_taxonomy

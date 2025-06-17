@@ -5,7 +5,7 @@
 #' @description
 #' Adding synonyms to existing concepts in database.
 #'
-#' @param conn A database connection provided by [dbConnect()].
+#' @param conn A database connection provided by [divDB::connect_db()].
 #' @param schema Character value indicating the name of the schema containing
 #'     all taxonomic tables in the database.
 #' @param df A data frame with new names and related information. Two columns

@@ -11,7 +11,7 @@ insert_synonyms(conn, ...)
 \method{insert_synonyms}{PostgreSQLConnection}(conn, df, schema = "plant_taxonomy", clean = TRUE, ...)
 }
 \arguments{
-\item{conn}{A database connection provided by \code{\link[=dbConnect]{dbConnect()}}.}
+\item{conn}{A database connection provided by \code{\link[divDB:connect_db]{divDB::connect_db()}}.}
 
 \item{...}{Further arguments passed among methods.}
 
