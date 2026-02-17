@@ -8,21 +8,32 @@
 \usage{
 insert_synonyms(conn, ...)
 
-\method{insert_synonyms}{PostgreSQLConnection}(conn, df, schema = "plant_taxonomy", clean = TRUE, ...)
+\method{insert_synonyms}{PostgreSQLConnection}(
+  conn,
+  df,
+  schema = "plant_taxonomy",
+  clean = TRUE,
+  eval = TRUE,
+  ...
+)
 }
 \arguments{
 \item{conn}{A database connection provided by \code{\link[divDB:connect_db]{divDB::connect_db()}}.}
 
-\item{...}{Further arguments passed among methods.}
+\item{...}{Further arguments passed to \code{\link[=insert_names]{insert_names()}}.}
 
-\item{df}{A data frame with new names and related information. Two columns
+\item{df}{A data frame with new names and related information. Three columns
 are mandatory, namely \strong{taxon_concept_id}, \strong{usage_name} and
-\strong{author_name}, both as character vectors.}
+\strong{author_name}. Alternatively a column \strong{taxon_usage_id} can be added
+for names already existing in the database.}
 
 \item{schema}{Character value indicating the name of the schema containing
 all taxonomic tables in the database.}
 
 \item{clean}{A logical value indicating cleaning of characters.}
+
+\item{eval}{A logical value indicating whether the produced SQL commands
+should be sent to the database or not.}
 }
 \description{
 Adding synonyms to existing concepts in database.

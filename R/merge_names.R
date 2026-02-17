@@ -41,8 +41,9 @@ merge_names <- function(conn, ...) {
 #' @method merge_names PostgreSQLConnection
 #' @export
 merge_names.PostgreSQLConnection <- function(
-    conn, usage_id,
-    schema = "plant_taxonomy", relations = NULL, eval = TRUE, ...) {
+  conn, usage_id,
+  schema = "plant_taxonomy", relations = NULL, eval = TRUE, ...
+) {
   # Check replacement on taxonomy
   q1 <- paste(
     "select t1.taxon_usage_id,t2.taxon_concept_id,t2.top_view\n",

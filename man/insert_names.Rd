@@ -2,17 +2,21 @@
 % Please edit documentation in R/insert_names.R
 \name{insert_names}
 \alias{insert_names}
-\alias{insert_names,PostgreSQLConnection,data.frame,character-method}
-\alias{insert_names,PostgreSQL,data.frame,character-method}
-\alias{insert_names,PostgreSQLConnection,data.frame,missing-method}
-\alias{insert_names,PostgreSQL,data.frame,missing-method}
+\alias{insert_names,PostgreSQLConnection,data.frame-method}
+\alias{insert_names,PostgreSQL,data.frame-method}
 \title{Insert new taxonomic names in database}
 \usage{
-insert_names(conn, df, schema, ...)
+insert_names(conn, df, ...)
 
-\S4method{insert_names}{PostgreSQLConnection,data.frame,character}(conn, df, schema, clean = TRUE, eval = TRUE, update = FALSE, ...)
-
-\S4method{insert_names}{PostgreSQLConnection,data.frame,missing}(conn, df, schema, ...)
+\S4method{insert_names}{PostgreSQLConnection,data.frame}(
+  conn,
+  df,
+  schema = "plant_taxonomy",
+  clean = TRUE,
+  eval = TRUE,
+  update = FALSE,
+  ...
+)
 }
 \arguments{
 \item{conn}{A \link[RPostgreSQL:PostgreSQLConnection-class]{RPostgreSQL::PostgreSQLConnection} object connecting to
@@ -22,11 +26,11 @@ a target database.}
 database. Two columns are mandatory in this data frame, namely
 \strong{usage_name} and \strong{author_name}.}
 
+\item{...}{Further arguments passed among methods (not in use).}
+
 \item{schema}{A character value indicating the name of the schema containing
 the taxonomic list. If the table \strong{taxon_names} does not exists in this
 schema, this function retrieves an error message.}
-
-\item{...}{Further arguments passed among methods (not in use).}
 
 \item{clean}{A logical value indicating cleaning of characters.}
 

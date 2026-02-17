@@ -29,24 +29,25 @@
 #' @param ... Further arguments passed among methods (not in use).
 #'
 #' @exportMethod insert_names
-setGeneric("insert_names", function(conn, df, schema, ...) {
+setGeneric("insert_names", function(conn, df, ...) {
   standardGeneric("insert_names")
 })
 
 #' @rdname insert_names
-#' @aliases insert_names,PostgreSQL,data.frame,character-method
+#' @aliases insert_names,PostgreSQL,data.frame-method
 setMethod(
   "insert_names", signature(
     conn = "PostgreSQLConnection",
-    df = "data.frame", schema = "character"
+    df = "data.frame"
   ),
-  function(conn, df, schema, clean = TRUE, eval = TRUE, update = FALSE, ...) {
+  function(
+    conn, df, schema = "plant_taxonomy", clean = TRUE, eval = TRUE,
+    update = FALSE, ...
+  ) {
     if (!dbExistsTable(conn, c(schema, "taxon_names"))) {
       stop("The input schema does not contain a table 'taxon_names'")
     }
-    if (clean) {
-      df <- clean_strings(df)
-    }
+    # Check for missing columns
     df_cols <- c("usage_name", "author_name")
     df_cols <- df_cols[!df_cols %in% names(df)]
     if (length(df_cols)) {
@@ -54,6 +55,10 @@ setMethod(
         "Following mandatory columns are missing in 'df': '",
         paste0(df_cols, collapse = "', '"), "'."
       ))
+    }
+    # Clean string
+    if (clean) {
+      df <- clean_strings(df)
     }
     # Check names in db
     db_names <- dbGetQuery(conn, paste(
@@ -102,18 +107,5 @@ setMethod(
     }
     # Return sql invisible
     invisible(query)
-  }
-)
-
-#' @rdname insert_names
-#' @aliases insert_names,PostgreSQL,data.frame,missing-method
-setMethod(
-  "insert_names", signature(
-    conn = "PostgreSQLConnection",
-    df = "data.frame",
-    schema = "missing"
-  ),
-  function(conn, df, ...) {
-    insert_names(conn = conn, df = df, schema = "plant_taxonomy", ...)
   }
 )
